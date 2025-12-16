@@ -1,5 +1,7 @@
 package msku.ceng.madproject.studybuddy;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -31,12 +33,22 @@ public class MainActivity extends AppCompatActivity {
         // navGroups ve navNotifications'ı da tanımlayabilirsiniz.
 
         // Tıklama Olayları (Click Listeners)
+        // MainActivity.java veya butonun bulunduğu Activity dosyası
         btnJoinGroups.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Raporlara göre, bu buton "Join Groups" sayfasına gitmelidir (Page 3)
                 showToast("Gruplara Katıl sayfasına gidiliyor...");
-                // Intent ile JoinGroupsActivity başlatılacak (ileride)
+
+                // --- İNTENT KODU BURAYA EKLENİYOR ---
+
+                // 1. Intent nesnesi oluşturulur.
+                // Intent, mevcut Activity'den (this) hedef Activity'ye (JoinGroupActivity.class) gitme niyetini belirtir.
+                Intent intent = new Intent(v.getContext(), JoinGroupActivity.class);
+
+                // 2. Intent ile hedef Activity başlatılır.
+                startActivity(intent);
+
+                // --- İNTENT KODU SONU ---
             }
         });
 
