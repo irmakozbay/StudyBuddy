@@ -14,74 +14,67 @@ public class MainActivity extends AppCompatActivity {
     private Button btnAddPost;
 
     private ImageButton navProfile;
-    // Diğer navigasyon butonları: navNotifications, navGroups
+    private ImageButton navNotifications;
+    private ImageButton navGroups;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // UI Elemanlarını Tanımlama
         btnJoinGroups = findViewById(R.id.btnJoinGroups);
         btnCreateGroup = findViewById(R.id.btnCreateGroup);
         btnStatistics = findViewById(R.id.btnStatistics);
         btnAddPost = findViewById(R.id.btnAddPost);
 
         navProfile = findViewById(R.id.nav_profile);
-        // navGroups ve navNotifications'ı da tanımlayabilirsiniz.
+        navNotifications = findViewById(R.id.nav_notifications);
+        navGroups = findViewById(R.id.nav_groups);
 
-        // Tıklama Olayları (Click Listeners)
         btnJoinGroups.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Raporlara göre, bu buton "Join Groups" sayfasına gitmelidir (Page 3)
-                showToast("Gruplara Katıl sayfasına gidiliyor...");
-                // Intent ile JoinGroupsActivity başlatılacak (ileride)
+                showToast("Redirecting to the Join Groups Page...");
             }
         });
 
         btnCreateGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Raporlara göre, bu buton "Create Group" sayfasına gitmelidir (Page 4)
-                showToast("Yeni Grup Oluştur sayfasına gidiliyor...");
-                // Intent ile CreateGroupActivity başlatılacak (ileride)
+                showToast("Redirecting to the Create Group Page...");
             }
         });
 
         btnStatistics.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Raporlara göre, bu buton "Statistics" sayfasına gitmelidir (Page 5)
-                showToast("İstatistikler sayfasına gidiliyor...");
-                // Intent ile StatisticsActivity başlatılacak (ileride)
+                showToast("Redirecting to the Statistics page...");
             }
         });
 
         btnAddPost.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showToast("Gönderi Ekleme formu açılıyor...");
-                // Burada yeni bir Post oluşturma formu açılabilir
+                showToast("Opening the add post page...");
             }
         });
 
-        // Alt Navigasyon Çubuğu Olayı
         navProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Raporlara göre, bu buton "Profile" sayfasına gitmelidir (Page 1)
-                showToast("Profil sayfasına gidiliyor...");
-                // Intent ile ProfileActivity başlatılacak (ileride)
+                showToast("Redirecting to the profile page...");
             }
         });
 
-        // navGroups için bir olay eklemeye gerek yok, çünkü zaten ana sayfadayız.
+        navGroups.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showToast("Redirecting to the groups page...");
+            }
+        });
     }
 
-    /**
-     * Kısa bir Toast mesajı gösteren yardımcı fonksiyon
-     */
     private void showToast(String message) {
         Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
     }
