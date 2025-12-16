@@ -24,6 +24,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_marginBottom="8dp"
+            android:layout_marginTop="40dp"
             android:contentDescription="StudyBuddy App Logo"
             android:src="@drawable/studybuddyapplogo" />
 
@@ -60,7 +61,7 @@
             android:layout_height="64dp"
             android:layout_marginBottom="16dp"
             android:background="@drawable/rounded_button_bg_light_green"
-            android:backgroundTint="#E4E9BB"
+            app:backgroundTint="@color/light_green"
             android:drawableStart="@drawable/join_group"
             android:drawablePadding="16dp"
             android:gravity="center_vertical"
