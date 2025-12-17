@@ -55,7 +55,8 @@ public class MainActivity extends AppCompatActivity {
         btnCreateGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Raporlara göre, bu buton "Create Group" sayfasına gitmelidir (Page 4)
+                Intent intent = new Intent(v.getContext(), CreateGroupActivity.class);
+                startActivity(intent);
                 showToast("Yeni Grup Oluştur sayfasına gidiliyor...");
                 // Intent ile CreateGroupActivity başlatılacak (ileride)
             }
