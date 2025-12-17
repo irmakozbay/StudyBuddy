@@ -64,9 +64,12 @@ public class MainActivity extends AppCompatActivity {
         btnStatistics.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Raporlara göre, bu buton "Statistics" sayfasına gitmelidir (Page 5)
-                showToast("İstatistikler sayfasına gidiliyor...");
-                // Intent ile StatisticsActivity başlatılacak (ileride)
+                // Kullanıcıya bilgi veriyoruz
+                Toast.makeText(v.getContext(), "İstatistikler sayfasına gidiliyor...", Toast.LENGTH_SHORT).show();
+
+                // INTENT: Mevcut sayfadan StatisticsActivity sayfasına geçiş başlatılır
+                Intent intent = new Intent(v.getContext(), ActivityStatistics.class);
+                startActivity(intent);
             }
         });
 
