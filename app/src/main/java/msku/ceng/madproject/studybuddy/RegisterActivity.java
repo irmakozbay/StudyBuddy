@@ -76,7 +76,7 @@ public class RegisterActivity extends AppCompatActivity {
                             updateUserProfile(user, nameSurname, username);
 
                             Toast.makeText(RegisterActivity.this, "Register Successes!", Toast.LENGTH_SHORT).show();
-                            navigateToMainActivity();
+                            navigateToLoginActivity();
 
                         } else {
                             Log.w(TAG, "createUserWithEmail:failure", task.getException());
@@ -106,8 +106,8 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
 
-    private void navigateToMainActivity() {
-        Intent mainIntent = new Intent(RegisterActivity.this, MainActivity.class);
+    private void navigateToLoginActivity() {
+        Intent mainIntent = new Intent(RegisterActivity.this, LoginActivity.class);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Tüm önceki ekranları temizle
         startActivity(mainIntent);
         finish();
