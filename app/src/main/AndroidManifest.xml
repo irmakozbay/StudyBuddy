@@ -12,11 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StudyBuddy">
         <activity
-<<<<<<< HEAD
             android:name=".RegisterActivity"
-=======
-            android:name=".JoinGroupActivity"
->>>>>>> bahriye
             android:exported="false" />
         <activity
             android:name=".MainActivity"
@@ -26,11 +22,13 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
+        <activity android:name=".ActivityStatistics"
+            android:exported="false" />
+        <activity android:name=".JoinGroupActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
