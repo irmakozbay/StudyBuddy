@@ -12,7 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StudyBuddy">
         <activity
+<<<<<<< HEAD
             android:name=".RegisterActivity"
+=======
+            android:name=".JoinGroupActivity"
+>>>>>>> bahriye
             android:exported="false" />
         <activity
             android:name=".MainActivity"
