@@ -6,19 +6,24 @@ import android.os.Bundle;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import java.util.ArrayList;
 import java.util.List;
 
 public class JoinGroupActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private List<Group> groupList;
+    private List<Group> fullGroupList; // Arama için orijinal listeyi saklar
     private GroupAdapter adapter;
 
     @Override
@@ -28,20 +33,53 @@ public class JoinGroupActivity extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.recycler_recommended_groups);
         ImageButton btnBack = findViewById(R.id.btn_back);
+        EditText editTextSearch = findViewById(R.id.et_search); // Arama çubuğu ID'si
 
-        // Verileri merkezi yerden alıyoruz
-        groupList = GroupManager.getGroups();
+        // Merkezi listeden verileri alıyoruz
+        fullGroupList = GroupManager.getGroups();
+        groupList = new ArrayList<>(fullGroupList);
 
         adapter = new GroupAdapter(this, groupList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+
+        // --- Arama Fonksiyonu ---
+        if (editTextSearch != null) {
+            editTextSearch.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    filter(s.toString()); // Her harf değişiminde filtrele
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {}
+            });
+        }
 
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> finish());
         }
     }
 
-    // ADAPTER SINIFI
+    // Filtreleme Mantığı
+    private void filter(String text) {
+        List<Group> filteredList = new ArrayList<>();
+
+        for (Group item : fullGroupList) {
+            // Grup isminde veya açıklamasında aranan kelime var mı?
+            if (item.getName().toLowerCase().contains(text.toLowerCase()) ||
+                    item.getDescription().toLowerCase().contains(text.toLowerCase())) {
+                filteredList.add(item);
+            }
+        }
+        // Adapter'ı yeni listeyle güncelle
+        adapter.updateList(filteredList);
+    }
+
+    // --- ADAPTER SINIFI ---
     public static class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
         private final Context context;
         private List<Group> groupList;
@@ -49,6 +87,12 @@ public class JoinGroupActivity extends AppCompatActivity {
         public GroupAdapter(Context context, List<Group> groupList) {
             this.context = context;
             this.groupList = groupList;
+        }
+
+        // Listeyi yenilemek için yeni metod
+        public void updateList(List<Group> newList) {
+            this.groupList = newList;
+            notifyDataSetChanged();
         }
 
         @NonNull
@@ -90,7 +134,7 @@ public class JoinGroupActivity extends AppCompatActivity {
         }
     }
 
-    // MODEL SINIFI
+    // --- MODEL SINIFI ---
     public static class Group {
         private String name, description;
         private int iconResId;
