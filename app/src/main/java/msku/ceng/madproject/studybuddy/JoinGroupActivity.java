@@ -1,93 +1,103 @@
 package msku.ceng.madproject.studybuddy;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
 import android.os.Bundle;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
-import android.content.Intent;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton; // Geri butonu için
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast; // Opsiyonel: Toast mesajları için
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import msku.ceng.madproject.studybuddy.R;
-
 public class JoinGroupActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private List<Group> groupList;
+    private List<Group> fullGroupList; // Arama için orijinal listeyi saklar
+    private GroupAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // activity_join_group.xml layout dosyasını bağlıyoruz
         setContentView(R.layout.activity_join_group);
 
         recyclerView = findViewById(R.id.recycler_recommended_groups);
-        groupList = new ArrayList<>();
+        ImageButton btnBack = findViewById(R.id.btn_back);
+        EditText editTextSearch = findViewById(R.id.et_search); // Arama çubuğu ID'si
 
-        // 1. Veri listesini doldur
-        prepareGroupData();
+        // Merkezi listeden verileri alıyoruz
+        fullGroupList = GroupManager.getGroups();
+        groupList = new ArrayList<>(fullGroupList);
 
-        // 2. Adapter'ı başlat ve RecyclerView'a bağla
-        GroupAdapter adapter = new GroupAdapter(this, groupList);
+        adapter = new GroupAdapter(this, groupList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        // ÖNEMLİ ÇÖZÜM: ScrollView içindeki RecyclerView'ın sorunsuz kayması için
-        recyclerView.setNestedScrollingEnabled(false);
+        // --- Arama Fonksiyonu ---
+        if (editTextSearch != null) {
+            editTextSearch.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-        // Geri Butonu işlevselliği
-        ImageButton btnBack = findViewById(R.id.btn_back);
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    filter(s.toString()); // Her harf değişiminde filtrele
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {}
+            });
+        }
+
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish()); // Activity'i kapatıp bir önceki ekrana döner
+            btnBack.setOnClickListener(v -> finish());
         }
     }
 
-    // ----------------------------------------------------
-    // *** 1. GROUP MODELİ (VERİ YAPISI) ***
-    // ----------------------------------------------------
+    // Filtreleme Mantığı
+    private void filter(String text) {
+        List<Group> filteredList = new ArrayList<>();
 
-    public static class Group {
-        private String name;
-        private String description;
-        private int iconResId;
-
-        public Group(String name, String description, int iconResId) {
-            this.name = name;
-            this.description = description;
-            this.iconResId = iconResId;
+        for (Group item : fullGroupList) {
+            // Grup isminde veya açıklamasında aranan kelime var mı?
+            if (item.getName().toLowerCase().contains(text.toLowerCase()) ||
+                    item.getDescription().toLowerCase().contains(text.toLowerCase())) {
+                filteredList.add(item);
+            }
         }
-
-        public String getName() { return name; }
-        public String getDescription() { return description; }
-        public int getIconResId() { return iconResId; }
+        // Adapter'ı yeni listeyle güncelle
+        adapter.updateList(filteredList);
     }
 
-    // ----------------------------------------------------
-    // *** 2. GROUP ADAPTER'I (BAĞLAYICI) ***
-    // ----------------------------------------------------
-
+    // --- ADAPTER SINIFI ---
     public static class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
-
         private final Context context;
-        private final List<Group> groupList;
+        private List<Group> groupList;
 
         public GroupAdapter(Context context, List<Group> groupList) {
             this.context = context;
             this.groupList = groupList;
         }
 
+        // Listeyi yenilemek için yeni metod
+        public void updateList(List<Group> newList) {
+            this.groupList = newList;
+            notifyDataSetChanged();
+        }
+
         @NonNull
         @Override
         public GroupViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            // item_group.xml layout dosyasını kullandığınız varsayılmıştır.
             View view = LayoutInflater.from(context).inflate(R.layout.item_group, parent, false);
             return new GroupViewHolder(view);
         }
@@ -99,25 +109,24 @@ public class JoinGroupActivity extends AppCompatActivity {
             holder.tvGroupDescription.setText(group.getDescription());
             holder.imgGroupIcon.setImageResource(group.getIconResId());
 
-            // Tıklama işlevi eklenebilir
-            holder.itemView.setOnClickListener(v ->
-                    Toast.makeText(context, group.getName() + " grubuna katılınıyor...", Toast.LENGTH_SHORT).show()
-            );
+            holder.itemView.setOnClickListener(v -> {
+                new AlertDialog.Builder(context)
+                        .setTitle("Join Group")
+                        .setMessage(group.getName() + " grubuna katılmak istiyor musunuz?")
+                        .setPositiveButton("Evet", (dialog, which) ->
+                                Toast.makeText(context, "Katıldınız!", Toast.LENGTH_SHORT).show())
+                        .show();
+            });
         }
 
         @Override
-        public int getItemCount() {
-            return groupList.size();
-        }
+        public int getItemCount() { return groupList.size(); }
 
         public static class GroupViewHolder extends RecyclerView.ViewHolder {
-            TextView tvGroupName;
-            TextView tvGroupDescription;
+            TextView tvGroupName, tvGroupDescription;
             ImageView imgGroupIcon;
-
             public GroupViewHolder(@NonNull View itemView) {
                 super(itemView);
-                // item_group.xml içindeki ID'lerinizin bu şekilde olduğunu varsayıyoruz
                 tvGroupName = itemView.findViewById(R.id.tv_group_name);
                 tvGroupDescription = itemView.findViewById(R.id.tv_group_description);
                 imgGroupIcon = itemView.findViewById(R.id.img_group_icon);
@@ -125,22 +134,17 @@ public class JoinGroupActivity extends AppCompatActivity {
         }
     }
 
-    // ----------------------------------------------------
-    // *** VERİ OLUŞTURMA METODU ***
-    // ----------------------------------------------------
-
-    private void prepareGroupData() {
-        // R.drawable.profile yerine kendi ikon dosyanızı kullanın.
-        // Bu ikonların projenizde (res/drawable altında) var olması GEREKİR.
-        int defaultIcon = R.drawable.profile; // Veya kullandığınız ikonun adı
-
-        groupList.add(new Group("Engineering Buddies", "Focused on first-year engineering students who mostly study calculus.", defaultIcon));
-        groupList.add(new Group("Study & Chill", "Collaborative study sessions and stay productive with friendly accountability.", defaultIcon));
-        groupList.add(new Group("Exam Prep Squad", "Focused on sharing notes, summaries, and tips before upcoming exams.", defaultIcon));
-        groupList.add(new Group("Code & Coffee", "For beginner programmers who love learning Java and Python with others.", defaultIcon));
-        groupList.add(new Group("Math Wizards", "Collaborate on solving calculus, algebra, and geometry problems.", defaultIcon));
-        groupList.add(new Group("Design Thinkers", "A creative community for students exploring UI/UX design basics.", defaultIcon));
-        groupList.add(new Group("Chemistry Pros", "Advanced topics and problem-solving sessions for chemistry majors.", defaultIcon));
-        groupList.add(new Group("History Buffs", "Discussing world history and preparing for essay exams.", defaultIcon));
+    // --- MODEL SINIFI ---
+    public static class Group {
+        private String name, description;
+        private int iconResId;
+        public Group(String name, String description, int iconResId) {
+            this.name = name;
+            this.description = description;
+            this.iconResId = iconResId;
+        }
+        public String getName() { return name; }
+        public String getDescription() { return description; }
+        public int getIconResId() { return iconResId; }
     }
 }
