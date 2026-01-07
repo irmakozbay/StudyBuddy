@@ -15,18 +15,17 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.FirebaseFirestore; // Eklendi
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class RegisterActivity extends AppCompatActivity {
 
     private static final String TAG = "RegisterActivity";
-
-    private EditText registerNameSurname;
-    private EditText registerEmail;
-    private EditText registerUsername;
-    private EditText registerPassword;
-
+    private EditText registerNameSurname, registerEmail, registerUsername, registerPassword;
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db; // Veritabanı referansı
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +33,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance(); // Veritabanını başlat
 
         registerNameSurname = findViewById(R.id.registerNameSurname);
         registerEmail = findViewById(R.id.registerEmail);
@@ -41,12 +41,7 @@ public class RegisterActivity extends AppCompatActivity {
         registerPassword = findViewById(R.id.registerPassword);
         Button buttonCreateAccount = findViewById(R.id.buttonCreateAccount);
 
-        buttonCreateAccount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                createAccount();
-            }
-        });
+        buttonCreateAccount.setOnClickListener(v -> createAccount());
     }
 
     private void createAccount() {
@@ -56,60 +51,61 @@ public class RegisterActivity extends AppCompatActivity {
         String password = registerPassword.getText().toString().trim();
 
         if (nameSurname.isEmpty() || email.isEmpty() || username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Name Surname cannot be empty.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lütfen tüm alanları doldurun.", Toast.LENGTH_SHORT).show();
             return;
         }
-
         if (password.length() < 6) {
-            Toast.makeText(this, "Password should be at least 6 characters.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Şifre en az 6 karakter olmalı.", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // 1. Authentication ile Kullanıcı Oluştur
         mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            Log.d(TAG, "createUserWithEmail:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "Kayıt başarılı, veritabanına yazılıyor...");
+                        FirebaseUser user = mAuth.getCurrentUser();
 
-                            updateUserProfile(user, nameSurname, username);
+                        // 2. Veritabanına Kullanıcı Detaylarını Kaydet
+                        saveUserToFirestore(user, nameSurname, username, email);
 
-                            Toast.makeText(RegisterActivity.this, "Register Successes!", Toast.LENGTH_SHORT).show();
-                            navigateToLoginActivity();
-
-                        } else {
-                            Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                            Toast.makeText(RegisterActivity.this, "Register Fails: " + task.getException().getMessage(),
-                                    Toast.LENGTH_LONG).show();
-                        }
+                    } else {
+                        Log.w(TAG, "Kayıt hatası", task.getException());
+                        Toast.makeText(RegisterActivity.this, "Kayıt başarısız: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
     }
 
-    private void updateUserProfile(FirebaseUser user, String nameSurname, String username) {
-        if (user != null) {
-            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                    .setDisplayName(nameSurname)
-                    .build();
+    private void saveUserToFirestore(FirebaseUser user, String name, String username, String email) {
+        if (user == null) return;
 
-            user.updateProfile(profileUpdates)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d(TAG, "User profile updated.");
-                            }
-                        }
-                    });
-        }
+        // Veritabanına gidecek veri paketi
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("userId", user.getUid());
+        userData.put("fullName", name);
+        userData.put("userName", username);
+        userData.put("email", email);
+        userData.put("bio", "Merhaba! Ben StudyBuddy kullanıyorum."); // Varsayılan bio
+        // İstersen followers, following gibi sayıları da 0 olarak başlatabilirsin
+        userData.put("followers", 0);
+        userData.put("following", 0);
+
+        // 'users' koleksiyonunda, kullanıcının kendi ID'si ile döküman oluştur
+        db.collection("users").document(user.getUid())
+                .set(userData)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(RegisterActivity.this, "Hesap oluşturuldu!", Toast.LENGTH_SHORT).show();
+                    navigateToLoginActivity();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(RegisterActivity.this, "Veritabanı hatası: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
-
     private void navigateToLoginActivity() {
-        Intent mainIntent = new Intent(RegisterActivity.this, LoginActivity.class);
-        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Tüm önceki ekranları temizle
-        startActivity(mainIntent);
+        Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         finish();
     }
 }

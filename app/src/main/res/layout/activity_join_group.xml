@@ -14,15 +14,20 @@
         android:layout_height="wrap_content"
         android:padding="16dp"
         android:orientation="horizontal"
+        android:elevation="12dp"
+        android:translationZ="12dp"
+        android:background="@android:color/white"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
             android:id="@+id/btn_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:src="@drawable/outline_arrow_back_ios_24"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:scaleType="centerInside"
+            android:clickable="true"
+            android:focusable="true"
             android:contentDescription="Geri" />
     </LinearLayout>
 
@@ -30,7 +35,9 @@
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="80dp"
         android:fillViewport="true"
+        android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/top_bar"
         app:layout_constraintBottom_toTopOf="@id/bottom_navigation_bar">
 

@@ -12,6 +12,9 @@ constraintlayout = "2.2.1"
 playServicesAuth = "21.4.0"
 playServicesTasks = "18.4.0"
 firebaseDatabase = "22.0.1"
+firebaseFirestore = "26.0.2"
+legacySupportV4 = "1.0.0"
+recyclerview = "1.4.0"
 
 [libraries]
 firebase-auth = { module = "com.google.firebase:firebase-auth", version.ref = "firebaseAuth" }
@@ -26,6 +29,9 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 play-services-tasks = { group = "com.google.android.gms", name = "play-services-tasks", version.ref = "playServicesTasks" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
+legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupportV4" }
+recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
