@@ -6,7 +6,6 @@ public class StudyLog {
     public String note;
     public long timestamp;
 
-    // Firebase için boş constructor şart
     public StudyLog() {}
 
     public StudyLog(String groupName, double hours, String note) {

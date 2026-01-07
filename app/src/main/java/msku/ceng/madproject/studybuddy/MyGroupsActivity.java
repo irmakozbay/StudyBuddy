@@ -1,5 +1,6 @@
 package msku.ceng.madproject.studybuddy;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,15 +9,15 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.auth.FirebaseAuth; // Eklendi
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MyGroupsActivity extends BaseActivity{
+public class MyGroupsActivity extends BaseActivity {
     private RecyclerView recyclerView;
     private List<Group> myGroups = new ArrayList<>();
     private MyGroupAdapter adapter;
@@ -26,28 +27,40 @@ public class MyGroupsActivity extends BaseActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_groups);
+        setupNavbar();
 
         db = FirebaseFirestore.getInstance();
         recyclerView = findViewById(R.id.recycler_my_groups);
         ImageButton btnBack = findViewById(R.id.btn_back);
 
         adapter = new MyGroupAdapter(myGroups);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);
+        if (recyclerView != null) {
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+            recyclerView.setAdapter(adapter);
+        }
 
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
         fetchMyGroups();
     }
 
+    @Override
+    protected void onProfileRequest() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("OPEN_FRAGMENT", "PROFILE");
+        startActivity(intent);
+    }
+
     private void fetchMyGroups() {
-        db.collection("users").document("user_1")
-                .collection("my_groups")
+        // USER_1 YERİNE DİNAMİK UID
+        String uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        db.collection("users").document(uId).collection("my_groups")
                 .addSnapshotListener((value, error) -> {
                     if (value != null) {
                         myGroups.clear();
                         for (DocumentSnapshot doc : value.getDocuments()) {
-                            myGroups.add(doc.toObject(Group.class));
+                            Group group = doc.toObject(Group.class);
+                            if (group != null) myGroups.add(group);
                         }
                         adapter.notifyDataSetChanged();
                     }
@@ -58,8 +71,7 @@ public class MyGroupsActivity extends BaseActivity{
         private List<Group> list;
         public MyGroupAdapter(List<Group> list) { this.list = list; }
 
-        @NonNull
-        @Override
+        @NonNull @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_group, parent, false);
             return new ViewHolder(v);
@@ -70,15 +82,12 @@ public class MyGroupsActivity extends BaseActivity{
             Group g = list.get(position);
             holder.name.setText(g.getName());
             holder.desc.setText(g.getDescription());
-            holder.icon.setImageResource(g.getIconResId());
         }
 
-        @Override
-        public int getItemCount() { return list.size(); }
+        @Override public int getItemCount() { return list.size(); }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            TextView name, desc;
-            ImageView icon;
+            TextView name, desc; ImageView icon;
             public ViewHolder(View v) {
                 super(v);
                 name = v.findViewById(R.id.tv_group_name);
