@@ -33,6 +33,8 @@ public class JoinGroupActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_join_group);
+
+        // BaseActivity içindeki navbar kurulumunu senin ID'lerine göre yaptık
         setupNavbar();
 
         db = FirebaseFirestore.getInstance();
@@ -43,6 +45,9 @@ public class JoinGroupActivity extends BaseActivity {
         adapter = new GroupAdapter(groupList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+
+        // ScrollView içinde RecyclerView olduğu için akışı bozmaması adına:
+        recyclerView.setNestedScrollingEnabled(false);
 
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
@@ -69,7 +74,6 @@ public class JoinGroupActivity extends BaseActivity {
                 for (DocumentSnapshot doc : value.getDocuments()) {
                     Group group = doc.toObject(Group.class);
                     if (group != null) {
-                        // KRİTİK: Firebase'den gelen döküman ID'sini modele set ediyoruz
                         group.setId(doc.getId());
                         fullGroupList.add(group);
                     }
@@ -89,13 +93,33 @@ public class JoinGroupActivity extends BaseActivity {
         adapter.updateList(filteredList);
     }
 
+    private void joinGroup(Group group) {
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) return;
+        String uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        db.collection("users").document(uId)
+                .collection("my_groups")
+                .document(group.getId())
+                .set(group)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(JoinGroupActivity.this, "Joined successfully!", Toast.LENGTH_SHORT).show();
+                    // OTOMATİK BİLDİRİM GÖNDERME
+                    sendNotification("Yeni Grup!", group.getName() + " grubuna başarıyla katıldınız.");
+                });
+    }
+
+    private void sendNotification(String title, String message) {
+        String uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        Notification notification = new Notification(title, message, System.currentTimeMillis());
+        db.collection("users").document(uId).collection("notifications").add(notification);
+    }
+
     private class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
         private List<Group> list;
         public GroupAdapter(List<Group> list) { this.list = list; }
         public void updateList(List<Group> newList) { this.list = newList; notifyDataSetChanged(); }
 
-        @NonNull
-        @Override
+        @NonNull @Override
         public GroupViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_group, parent, false);
             return new GroupViewHolder(v);
@@ -106,47 +130,23 @@ public class JoinGroupActivity extends BaseActivity {
             Group group = list.get(position);
             holder.tvName.setText(group.getName());
             holder.tvDesc.setText(group.getDescription());
-            // İkon varsa set et
+
             holder.itemView.setOnClickListener(v -> {
                 new AlertDialog.Builder(JoinGroupActivity.this)
                         .setTitle("Join Group")
-                        .setMessage("Join " + group.getName() + "?")
-                        .setPositiveButton("Yes", (dialog, which) -> joinGroup(group))
-                        .setNegativeButton("No", null).show();
+                        .setMessage(group.getName() + " grubuna katılmak istiyor musunuz?")
+                        .setPositiveButton("Evet", (dialog, which) -> joinGroup(group))
+                        .setNegativeButton("Hayır", null).show();
             });
-        }
-
-        private void joinGroup(Group group) {
-            if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-                Toast.makeText(JoinGroupActivity.this, "Please login first!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            String uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
-            // Eğer group.getId() hala null ise döküman oluşturulamaz
-            String groupId = group.getId();
-            if (groupId == null) {
-                Toast.makeText(JoinGroupActivity.this, "Error: Group ID is null", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            db.collection("users").document(uId)
-                    .collection("my_groups")
-                    .document(groupId)
-                    .set(group)
-                    .addOnSuccessListener(aVoid -> Toast.makeText(JoinGroupActivity.this, "Joined successfully!", Toast.LENGTH_SHORT).show())
-                    .addOnFailureListener(e -> Toast.makeText(JoinGroupActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
         }
 
         @Override public int getItemCount() { return list.size(); }
         class GroupViewHolder extends RecyclerView.ViewHolder {
-            TextView tvName, tvDesc; ImageView imgIcon;
+            TextView tvName, tvDesc;
             public GroupViewHolder(@NonNull View v) {
                 super(v);
                 tvName = v.findViewById(R.id.tv_group_name);
                 tvDesc = v.findViewById(R.id.tv_group_description);
-                imgIcon = v.findViewById(R.id.img_group_icon);
             }
         }
     }

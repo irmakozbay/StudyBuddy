@@ -15,6 +15,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StudyBuddy">
         <activity
+            android:name=".NotificationsActivity"
+            android:exported="false" />
+        <activity
             android:name=".MyGroupsActivity"
             android:exported="false" />
         <activity

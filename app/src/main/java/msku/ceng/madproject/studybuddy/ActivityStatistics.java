@@ -4,10 +4,10 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -15,12 +15,13 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
-import com.google.firebase.auth.FirebaseAuth; // Eklendi
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -58,14 +59,34 @@ public class ActivityStatistics extends AppCompatActivity {
         });
 
         fetchStudyData();
+        fetchActiveGroupsCount();
     }
 
     private void updateGoalDisplay(int goalValue) {
         tvWeeklyGoalText.setText(String.format("%.1f / %d hours", currentTotalHours, goalValue));
     }
 
+    private void fetchActiveGroupsCount() {
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) return;
+        String uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        db.collection("users").document(uId).collection("my_groups")
+                .addSnapshotListener(this, (value, error) -> {
+                    if (error != null) {
+                        Log.e("Stats", "Error: " + error.getMessage());
+                        return;
+                    }
+                    if (value != null) {
+                        int count = value.size();
+                        mainHandler.post(() -> {
+                            if (tvActiveGroups != null) tvActiveGroups.setText(String.valueOf(count));
+                        });
+                    }
+                });
+    }
+
     private void fetchStudyData() {
-        // USER_1 YERİNE DİNAMİK UID
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) return;
         String uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         db.collection("users").document(uId).collection("study_logs")
                 .addSnapshotListener((value, error) -> {
@@ -74,38 +95,48 @@ public class ActivityStatistics extends AppCompatActivity {
                         executorService.execute(() -> {
                             float[] weeklyHours = new float[7];
                             currentTotalHours = 0;
-                            HashSet<String> uniqueGroups = new HashSet<>();
                             TreeSet<Long> studyDates = new TreeSet<>();
                             long now = System.currentTimeMillis();
 
                             for (QueryDocumentSnapshot doc : value) {
                                 Double hours = doc.getDouble("hours");
                                 Long timestamp = doc.getLong("timestamp");
-                                String groupName = doc.getString("groupName");
-
                                 if (hours != null && timestamp != null && timestamp <= now) {
                                     currentTotalHours += hours;
-                                    if (groupName != null) uniqueGroups.add(groupName);
                                     Calendar cal = Calendar.getInstance();
                                     cal.setTimeInMillis(timestamp);
                                     int index = mapDayToIndex(cal.get(Calendar.DAY_OF_WEEK));
                                     weeklyHours[index] += hours.floatValue();
-                                    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0);
+                                    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0);
+                                    cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0);
                                     studyDates.add(cal.getTimeInMillis());
                                 }
                             }
-
                             int streak = calculateStreak(studyDates);
                             mainHandler.post(() -> {
                                 if (tvTotalHours != null) tvTotalHours.setText(String.format("%.1f h", currentTotalHours));
-                                if (tvActiveGroups != null) tvActiveGroups.setText(String.valueOf(uniqueGroups.size()));
-                                if (tvStreak != null) tvStreak.setText(streak + " day");
+                                if (tvStreak != null) tvStreak.setText(streak + (streak == 1 ? " day" : " days"));
+
+                                if (streak >= 7) {
+                                    sendStreakNotification(streak);
+                                }
+
                                 updateGoalDisplay(seekBarWeeklyGoal.getProgress());
                                 updateChart(weeklyHours);
                             });
                         });
                     }
                 });
+    }
+
+    private void sendStreakNotification(int streak) {
+        String uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        Map<String, Object> notification = new HashMap<>();
+        notification.put("title", "Study Streak Milestone! 🔥");
+        notification.put("message", "Amazing! You have maintained a " + streak + "-day streak. Keep pushing!");
+        notification.put("timestamp", System.currentTimeMillis());
+
+        db.collection("users").document(uId).collection("notifications").add(notification);
     }
 
     private int calculateStreak(TreeSet<Long> dates) {
@@ -137,7 +168,7 @@ public class ActivityStatistics extends AppCompatActivity {
         if (barChart == null) return;
         ArrayList<BarEntry> entries = new ArrayList<>();
         for (int i = 0; i < 7; i++) entries.add(new BarEntry(i, dataPoints[i]));
-        BarDataSet dataSet = new BarDataSet(entries, "Weekly");
+        BarDataSet dataSet = new BarDataSet(entries, "Weekly Stats");
         dataSet.setColor(Color.parseColor("#A2AD7E"));
         BarData data = new BarData(dataSet);
         data.setBarWidth(0.5f);
