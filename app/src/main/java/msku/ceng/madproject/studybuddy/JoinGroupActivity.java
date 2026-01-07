@@ -1,5 +1,6 @@
 package msku.ceng.madproject.studybuddy;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -13,7 +14,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -46,27 +46,26 @@ public class JoinGroupActivity extends BaseActivity {
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
         editTextSearch.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filter(s.toString());
-            }
-            @Override
-            public void afterTextChanged(Editable s) {}
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { filter(s.toString()); }
+            @Override public void afterTextChanged(Editable s) {}
         });
 
         fetchGroupsFromFirebase();
+    }
 
+    @Override
+    protected void onProfileRequest() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("OPEN_FRAGMENT", "PROFILE");
+        startActivity(intent);
     }
 
     private void fetchGroupsFromFirebase() {
         db.collection("groups").addSnapshotListener((value, error) -> {
             if (value != null) {
                 fullGroupList.clear();
-                for (DocumentSnapshot doc : value.getDocuments()) {
-                    fullGroupList.add(doc.toObject(Group.class));
-                }
+                for (DocumentSnapshot doc : value.getDocuments()) { fullGroupList.add(doc.toObject(Group.class)); }
                 groupList.clear();
                 groupList.addAll(fullGroupList);
                 adapter.notifyDataSetChanged();
@@ -77,14 +76,12 @@ public class JoinGroupActivity extends BaseActivity {
     private void filter(String text) {
         List<Group> filteredList = new ArrayList<>();
         for (Group item : fullGroupList) {
-            if (item.getName().toLowerCase().contains(text.toLowerCase())) {
-                filteredList.add(item);
-            }
+            if (item.getName().toLowerCase().contains(text.toLowerCase())) { filteredList.add(item); }
         }
         adapter.updateList(filteredList);
     }
 
-    // --- ADAPTER ---
+    // --- ADAPTER VE VIEWHOLDER KISMI --- (Aynı kalacak şekilde devam eder)
     private class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
         private List<Group> list;
         public GroupAdapter(List<Group> list) { this.list = list; }
@@ -103,36 +100,24 @@ public class JoinGroupActivity extends BaseActivity {
             holder.tvName.setText(group.getName());
             holder.tvDesc.setText(group.getDescription());
             holder.imgIcon.setImageResource(group.getIconResId());
-
             holder.itemView.setOnClickListener(v -> {
                 new AlertDialog.Builder(JoinGroupActivity.this)
                         .setTitle("Join Group")
                         .setMessage("Join " + group.getName() + "?")
                         .setPositiveButton("Yes", (dialog, which) -> joinGroup(group))
-                        .setNegativeButton("No", null)
-                        .show();
+                        .setNegativeButton("No", null).show();
             });
         }
 
         private void joinGroup(Group group) {
-            db.collection("users").document("user_1")
-                    .collection("my_groups").document(group.getId())
-                    .set(group)
+            db.collection("users").document("user_1").collection("my_groups").document(group.getId()).set(group)
                     .addOnSuccessListener(aVoid -> Toast.makeText(JoinGroupActivity.this, "Joined!", Toast.LENGTH_SHORT).show());
         }
 
-        @Override
-        public int getItemCount() { return list.size(); }
-
+        @Override public int getItemCount() { return list.size(); }
         class GroupViewHolder extends RecyclerView.ViewHolder {
-            TextView tvName, tvDesc;
-            ImageView imgIcon;
-            public GroupViewHolder(@NonNull View v) {
-                super(v);
-                tvName = v.findViewById(R.id.tv_group_name);
-                tvDesc = v.findViewById(R.id.tv_group_description);
-                imgIcon = v.findViewById(R.id.img_group_icon);
-            }
+            TextView tvName, tvDesc; ImageView imgIcon;
+            public GroupViewHolder(@NonNull View v) { super(v); tvName = v.findViewById(R.id.tv_group_name); tvDesc = v.findViewById(R.id.tv_group_description); imgIcon = v.findViewById(R.id.img_group_icon); }
         }
     }
 }

@@ -3,10 +3,9 @@ package msku.ceng.madproject.studybuddy;
 import android.content.Intent;
 import android.widget.ImageButton;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 
-public class BaseActivity extends AppCompatActivity {
+// ABSTRACT olması şart, yoksa miras alan sınıflar hata verir
+public abstract class BaseActivity extends AppCompatActivity {
 
     protected void setupNavbar() {
         ImageButton navGroups = findViewById(R.id.nav_groups);
@@ -15,33 +14,35 @@ public class BaseActivity extends AppCompatActivity {
 
         if (navGroups != null) {
             navGroups.setOnClickListener(v -> {
-                if (!(this instanceof JoinGroupActivity)) {
-                    startActivity(new Intent(this, JoinGroupActivity.class));
-                    // Fragment'tan Activity'ye geçerken finish() diyebilirsin
+                if (!(this instanceof MyGroupsActivity)) {
+                    startActivity(new Intent(this, MyGroupsActivity.class));
                 }
             });
         }
+
+//        if (navNotifications != null) {
+//            navNotifications.setOnClickListener(v -> {
+//                if (!(this instanceof NotificationsActivity)) {
+//                    startActivity(new Intent(this, NotificationsActivity.class));
+//                }
+//            });
+//        }
 
         if (navProfile != null) {
             navProfile.setOnClickListener(v -> {
-                // EĞER ŞU AN MAINACTIVITY'DEYSEK FRAGMENT'I YÜKLE
-                if (this instanceof MainActivity) {
-                    loadFragment(new ProfileFragment());
-                } else {
-                    // EĞER BAŞKA SAYFADAYSAK ÖNCE MAIN'E GİT, SONRA FRAGMENT'I AÇ
+                // Fragment olduğu için direkt Main'e yönlendiriyoruz
+                if (!(this instanceof MainActivity)) {
                     Intent intent = new Intent(this, MainActivity.class);
-                    intent.putExtra("openFragment", "profile");
+                    intent.putExtra("OPEN_FRAGMENT", "PROFILE");
                     startActivity(intent);
+                } else {
+                    // Zaten Main'deysen bu metodu tetikle
+                    onProfileRequest();
                 }
             });
         }
     }
 
-    private void loadFragment(Fragment fragment) {
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        // 'fragment_container' MainActivity XML'indeki id olmalı
-        transaction.replace(R.id.fragment_container, fragment);
-        transaction.addToBackStack(null);
-        transaction.commit();
-    }
+    // Bu metodu her Activity kendi içinde dolduracak (Abstract Metod)
+    protected abstract void onProfileRequest();
 }

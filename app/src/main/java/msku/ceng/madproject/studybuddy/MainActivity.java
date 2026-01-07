@@ -1,22 +1,23 @@
 package msku.ceng.madproject.studybuddy;
 
-import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
+import androidx.fragment.app.Fragment;
 
 public class MainActivity extends BaseActivity {
 
     private Button btnJoinGroups, btnCreateGroup, btnStatistics, btnAddPost, btnActivities;
-    private ImageButton navProfile, navNotifications, navGroups;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Navbar'ı BaseActivity üzerinden kur
+        setupNavbar();
 
         // UI Element Initialization
         btnJoinGroups = findViewById(R.id.btnJoinGroups);
@@ -24,61 +25,41 @@ public class MainActivity extends BaseActivity {
         btnStatistics = findViewById(R.id.btnStatistics);
         btnAddPost = findViewById(R.id.btnAddPost);
         btnActivities = findViewById(R.id.btnActivities);
-        navProfile = findViewById(R.id.nav_profile);
-        navGroups = findViewById(R.id.nav_groups);
-        navNotifications = findViewById(R.id.nav_notifications);
 
-
-        // Join Groups Click Listener
+        // Click Listeners
         btnJoinGroups.setOnClickListener(v -> {
-            showToast("Navigating to Join Groups...");
-            Intent intent = new Intent(MainActivity.this, JoinGroupActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(MainActivity.this, JoinGroupActivity.class));
         });
 
-        // Activities (Update Stats) Click Listener
         btnActivities.setOnClickListener(v -> {
-            showToast("Opening Activity Entry...");
-            Intent intent = new Intent(MainActivity.this, UpdateStatsActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(MainActivity.this, UpdateStatsActivity.class));
         });
 
-        // Create Group Click Listener
         btnCreateGroup.setOnClickListener(v -> {
-            showToast("Navigating to Create Group...");
-            Intent intent = new Intent(MainActivity.this, CreateGroupActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(MainActivity.this, CreateGroupActivity.class));
         });
 
-        // Statistics Click Listener
         btnStatistics.setOnClickListener(v -> {
-            showToast("Navigating to Statistics...");
-            Intent intent = new Intent(MainActivity.this, ActivityStatistics.class);
-            startActivity(intent);
+            startActivity(new Intent(MainActivity.this, ActivityStatistics.class));
         });
 
-        // Add Post Click Listener
-        btnAddPost.setOnClickListener(v -> {
-            showToast("Opening Add Post form...");
-            // Intent for AddPostActivity can be added here
-        });
-        navGroups.setOnClickListener((v -> {
-            showToast("Navigating to My Groups...");
-            Intent intent = new Intent(MainActivity.this, MyGroupsActivity.class);
-            startActivity(intent);
-        }));
-
-
-
-        // Bottom Navigation Profile Click Listener
-        navProfile.setOnClickListener(v -> {
-            showToast("Navigating to Profile...");
-            Intent intent = new Intent(MainActivity.this, ProfileFragment.class);
-            startActivity(intent);
-        });
+        // Diğer sayfalardan profil butonuna basılarak gelindiyse kontrol et
+        if ("PROFILE".equals(getIntent().getStringExtra("OPEN_FRAGMENT"))) {
+            onProfileRequest();
+        }
     }
 
-    private void showToast(String message) {
-        Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+    @Override
+    protected void onProfileRequest() {
+        // HATA ÇÖZÜMÜ: Fragment startActivity ile DEĞİL, Transaction ile yüklenir
+        loadFragment(new ProfileFragment());
+    }
+
+    private void loadFragment(Fragment fragment) {
+        // fragment_container ID'si activity_main.xml'de tanımlı olmalı
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
     }
 }
