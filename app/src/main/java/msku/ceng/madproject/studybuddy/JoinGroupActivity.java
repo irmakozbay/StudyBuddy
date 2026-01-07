@@ -1,11 +1,6 @@
 package msku.ceng.madproject.studybuddy;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AlertDialog;
 import android.os.Bundle;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import android.content.Context;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -17,134 +12,127 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JoinGroupActivity extends AppCompatActivity {
+public class JoinGroupActivity extends BaseActivity {
     private RecyclerView recyclerView;
-    private List<Group> groupList;
-    private List<Group> fullGroupList; // Arama için orijinal listeyi saklar
+    private List<Group> groupList = new ArrayList<>();
+    private List<Group> fullGroupList = new ArrayList<>();
     private GroupAdapter adapter;
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_join_group);
+        setupNavbar();
 
+        db = FirebaseFirestore.getInstance();
         recyclerView = findViewById(R.id.recycler_recommended_groups);
         ImageButton btnBack = findViewById(R.id.btn_back);
-        EditText editTextSearch = findViewById(R.id.et_search); // Arama çubuğu ID'si
+        EditText editTextSearch = findViewById(R.id.et_search);
 
-        // Merkezi listeden verileri alıyoruz
-        fullGroupList = GroupManager.getGroups();
-        groupList = new ArrayList<>(fullGroupList);
-
-        adapter = new GroupAdapter(this, groupList);
+        adapter = new GroupAdapter(groupList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        // --- Arama Fonksiyonu ---
-        if (editTextSearch != null) {
-            editTextSearch.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    filter(s.toString()); // Her harf değişiminde filtrele
-                }
+        editTextSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filter(s.toString());
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
-                @Override
-                public void afterTextChanged(Editable s) {}
-            });
-        }
+        fetchGroupsFromFirebase();
 
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
-        }
     }
 
-    // Filtreleme Mantığı
+    private void fetchGroupsFromFirebase() {
+        db.collection("groups").addSnapshotListener((value, error) -> {
+            if (value != null) {
+                fullGroupList.clear();
+                for (DocumentSnapshot doc : value.getDocuments()) {
+                    fullGroupList.add(doc.toObject(Group.class));
+                }
+                groupList.clear();
+                groupList.addAll(fullGroupList);
+                adapter.notifyDataSetChanged();
+            }
+        });
+    }
+
     private void filter(String text) {
         List<Group> filteredList = new ArrayList<>();
-
         for (Group item : fullGroupList) {
-            // Grup isminde veya açıklamasında aranan kelime var mı?
-            if (item.getName().toLowerCase().contains(text.toLowerCase()) ||
-                    item.getDescription().toLowerCase().contains(text.toLowerCase())) {
+            if (item.getName().toLowerCase().contains(text.toLowerCase())) {
                 filteredList.add(item);
             }
         }
-        // Adapter'ı yeni listeyle güncelle
         adapter.updateList(filteredList);
     }
 
-    // --- ADAPTER SINIFI ---
-    public static class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
-        private final Context context;
-        private List<Group> groupList;
-
-        public GroupAdapter(Context context, List<Group> groupList) {
-            this.context = context;
-            this.groupList = groupList;
-        }
-
-        // Listeyi yenilemek için yeni metod
-        public void updateList(List<Group> newList) {
-            this.groupList = newList;
-            notifyDataSetChanged();
-        }
+    // --- ADAPTER ---
+    private class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
+        private List<Group> list;
+        public GroupAdapter(List<Group> list) { this.list = list; }
+        public void updateList(List<Group> newList) { this.list = newList; notifyDataSetChanged(); }
 
         @NonNull
         @Override
         public GroupViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(context).inflate(R.layout.item_group, parent, false);
-            return new GroupViewHolder(view);
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_group, parent, false);
+            return new GroupViewHolder(v);
         }
 
         @Override
         public void onBindViewHolder(@NonNull GroupViewHolder holder, int position) {
-            Group group = groupList.get(position);
-            holder.tvGroupName.setText(group.getName());
-            holder.tvGroupDescription.setText(group.getDescription());
-            holder.imgGroupIcon.setImageResource(group.getIconResId());
+            Group group = list.get(position);
+            holder.tvName.setText(group.getName());
+            holder.tvDesc.setText(group.getDescription());
+            holder.imgIcon.setImageResource(group.getIconResId());
 
             holder.itemView.setOnClickListener(v -> {
-                new AlertDialog.Builder(context)
+                new AlertDialog.Builder(JoinGroupActivity.this)
                         .setTitle("Join Group")
-                        .setMessage(group.getName() + " grubuna katılmak istiyor musunuz?")
-                        .setPositiveButton("Evet", (dialog, which) ->
-                                Toast.makeText(context, "Katıldınız!", Toast.LENGTH_SHORT).show())
+                        .setMessage("Join " + group.getName() + "?")
+                        .setPositiveButton("Yes", (dialog, which) -> joinGroup(group))
+                        .setNegativeButton("No", null)
                         .show();
             });
         }
 
-        @Override
-        public int getItemCount() { return groupList.size(); }
+        private void joinGroup(Group group) {
+            db.collection("users").document("user_1")
+                    .collection("my_groups").document(group.getId())
+                    .set(group)
+                    .addOnSuccessListener(aVoid -> Toast.makeText(JoinGroupActivity.this, "Joined!", Toast.LENGTH_SHORT).show());
+        }
 
-        public static class GroupViewHolder extends RecyclerView.ViewHolder {
-            TextView tvGroupName, tvGroupDescription;
-            ImageView imgGroupIcon;
-            public GroupViewHolder(@NonNull View itemView) {
-                super(itemView);
-                tvGroupName = itemView.findViewById(R.id.tv_group_name);
-                tvGroupDescription = itemView.findViewById(R.id.tv_group_description);
-                imgGroupIcon = itemView.findViewById(R.id.img_group_icon);
+        @Override
+        public int getItemCount() { return list.size(); }
+
+        class GroupViewHolder extends RecyclerView.ViewHolder {
+            TextView tvName, tvDesc;
+            ImageView imgIcon;
+            public GroupViewHolder(@NonNull View v) {
+                super(v);
+                tvName = v.findViewById(R.id.tv_group_name);
+                tvDesc = v.findViewById(R.id.tv_group_description);
+                imgIcon = v.findViewById(R.id.img_group_icon);
             }
         }
-    }
-
-    // --- MODEL SINIFI ---
-    public static class Group {
-        private String name, description;
-        private int iconResId;
-        public Group(String name, String description, int iconResId) {
-            this.name = name;
-            this.description = description;
-            this.iconResId = iconResId;
-        }
-        public String getName() { return name; }
-        public String getDescription() { return description; }
-        public int getIconResId() { return iconResId; }
     }
 }

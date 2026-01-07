@@ -5,9 +5,7 @@ plugins {
 
 android {
     namespace 'msku.ceng.madproject.studybuddy'
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk 36 // Version parantezini kaldırıp direkt sayı yazabilirsin
 
     defaultConfig {
         applicationId "msku.ceng.madproject.studybuddy"
@@ -32,19 +30,24 @@ android {
 }
 
 dependencies {
+    implementation 'com.github.PhilJay:MPAndroidChart:3.1.0'
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
     implementation libs.constraintlayout
+
+    // Firebase BoM (Versiyon yönetimini sağlar)
+    implementation(platform(libs.firebase.bom))
+
+    // Firebase Servisleri
+    implementation libs.firebase.auth
+    implementation libs.firebase.database // Mevcut Realtime DB
+    implementation "com.google.firebase:firebase-firestore" // YENİ: Firestore'u buraya ekledik
+
+    implementation libs.play.services.auth
     implementation libs.play.services.tasks
-    implementation libs.firebase.database
+
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
-
-    implementation(platform(libs.firebase.bom))
-
-    implementation(libs.firebase.auth)
-
-    implementation(libs.play.services.auth)
 }
