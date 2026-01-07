@@ -1,49 +1,40 @@
 package msku.ceng.madproject.studybuddy;
 
 public class Material {
-    private String id;
-    private String fileName;
-    private String fileUrl; // PDF veya resim linki olabilir
+    private String materialId;
+    private String title;
+    private String description; // "Subhead" dediğin kısım
     private String userId;
+    private String postType;
 
-    public Material() { }
+    public Material() { } // Firebase için boş constructor
 
-    public Material(String id, String fileName, String fileUrl, String userId) {
-        this.id = id;
-        this.fileName = fileName;
-        this.fileUrl = fileUrl;
+    public Material(String materialId, String title, String description, String userId) {
+        this.materialId = materialId;
+        this.title = title;
+        this.description = description;
         this.userId = userId;
     }
 
-    public String getId() {
-        return id;
+    // Getter ve Setterlar
+    public String getMaterialId() { return materialId; }
+    public void setMaterialId(String materialId) { this.materialId = materialId; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+
+    public String getPostType() {
+        return postType;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setPostType(String postType) {
+        this.postType = postType;
     }
 
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public String getFileUrl() {
-        return fileUrl;
-    }
-
-    public void setFileUrl(String fileUrl) {
-        this.fileUrl = fileUrl;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
 }

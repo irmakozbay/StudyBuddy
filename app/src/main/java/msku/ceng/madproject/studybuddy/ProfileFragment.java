@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,11 +36,11 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        // 1. ÖNCE FIREBASE'İ BAŞLAT (En Önemli Kısım: Sıralamayı değiştirdik)
+        // 1. Firebase Başlatma
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
 
-        // 2. View Elemanlarını Tanımla
+        // 2. View Elemanları
         tabLayout = view.findViewById(R.id.tabLayout);
         viewPager = view.findViewById(R.id.viewPager);
         profileName = view.findViewById(R.id.profileName);
@@ -51,20 +50,25 @@ public class ProfileFragment extends Fragment {
         btnBack = view.findViewById(R.id.btnBack);
         btnLogout = view.findViewById(R.id.btnLogout);
 
+        // Z-Index ayarı (Önde görünsünler diye)
         btnBack.bringToFront();
         btnLogout.bringToFront();
 
-        // 3. Buton İşlevlerini Tanımla
+        // 3. Buton İşlevleri
 
-        // GERİ TUŞU:
+        // --- DÜZELTİLEN KISIM: GERİ TUŞU ---
         btnBack.setOnClickListener(v -> {
             if (getActivity() != null) {
-                // onBackPressed yerine finish() kullanmak sayfayı direkt kapatır ve alttakine döner.
-                getActivity().finish();
+                // finish() yerine Ana Sayfayı yeniden başlatıyoruz.
+                // Bu sayede butonlar geri gelir ve uygulama kapanmaz.
+                Intent intent = new Intent(getActivity(), MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                getActivity().finish(); // Şu anki karışık durumu kapat
             }
         });
 
-        // ÇIKIŞ (LOGOUT) TUŞU:
+        // ÇIKIŞ (LOGOUT) TUŞU
         btnLogout.setOnClickListener(v -> {
             if (mAuth != null) {
                 mAuth.signOut();
@@ -99,7 +103,7 @@ public class ProfileFragment extends Fragment {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    // Hata olursa kullanıcıya sessizce varsayılanı göster veya logla
+                    // Hata yönetimi
                 });
     }
 

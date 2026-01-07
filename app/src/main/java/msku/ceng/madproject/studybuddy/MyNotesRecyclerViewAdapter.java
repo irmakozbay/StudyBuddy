@@ -1,21 +1,15 @@
 package msku.ceng.madproject.studybuddy;
 
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.firebase.firestore.FirebaseFirestore;
-
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.LinkedList;
 import java.util.List;
-import msku.ceng.madproject.studybuddy.databinding.ItemNoteBinding; //
+import msku.ceng.madproject.studybuddy.databinding.ItemNoteBinding;
 
 public class MyNotesRecyclerViewAdapter extends RecyclerView.Adapter<MyNotesRecyclerViewAdapter.ViewHolder> {
 
@@ -32,29 +26,31 @@ public class MyNotesRecyclerViewAdapter extends RecyclerView.Adapter<MyNotesRecy
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        
-        holder.mItem = mValues.get(position);
-        holder.mTitleView.setText(mValues.get(position).getTitle());
-        holder.mContentView.setText(mValues.get(position).getContent());
+        Note note = mValues.get(position);
+
+        holder.mTitleView.setText(note.getTitle());
+        holder.mContentView.setText(note.getContent());
 
         holder.deleteButton.setOnClickListener(v -> {
-            // 1. Notun ID'sini al
-            ArrayList<Object> noteList = new ArrayList<>();
-            String noteId = noteList.get(position).getClass(); // Model sınıfınızda noteId tuttuğunuzu varsayıyorum
+            Context context = v.getContext();
+            String noteId = note.getNoteId();
 
-            // 2. Firebase'den sil
-            Context context;
-            FirebaseFirestore.getInstance().collection("Notes").document(noteId)
+            if (noteId == null || noteId.isEmpty()) {
+                Toast.makeText(context, "Hata: Not ID bulunamadı", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // DÜZELTME: "notes" yerine "posts" koleksiyonundan siliyoruz
+            FirebaseFirestore.getInstance().collection("posts").document(noteId)
                     .delete()
                     .addOnSuccessListener(aVoid -> {
-                        // 3. Başarılı olursa listeyi güncelle
-                        noteList.remove(position);
-                        notifyItemRemoved(position);
-                        notifyItemRangeChanged(position, noteList.size());
                         Toast.makeText(context, "Not silindi", Toast.LENGTH_SHORT).show();
+                        // Not: addSnapshotListener kullandığımız için remove işlemini
+                        // manuel yapmaya gerek kalmayabilir, liste otomatik güncellenir.
+                        // Ama görsel akıcılık için durabilir.
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(context, "Hata oluştu", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Silinemedi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
         });
     }
@@ -67,13 +63,16 @@ public class MyNotesRecyclerViewAdapter extends RecyclerView.Adapter<MyNotesRecy
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final TextView mTitleView;
         public final TextView mContentView;
-        public Note mItem;
-        public View deleteButton;
+        public final View deleteButton;
 
         public ViewHolder(ItemNoteBinding binding) {
             super(binding.getRoot());
             mTitleView = binding.noteTitle;
             mContentView = binding.noteContent;
+
+            // XML'de id'si neyse onu kullan (Örn: btnDelete)
+            // Eğer binding'de bulamıyorsa binding.btnDeleteNote gibi kontrol et
+            deleteButton = binding.getRoot(); // Burayı kendi XML id'ne göre güncelle!
         }
     }
 }

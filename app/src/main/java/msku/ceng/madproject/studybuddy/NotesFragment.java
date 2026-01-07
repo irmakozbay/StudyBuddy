@@ -1,29 +1,19 @@
 package msku.ceng.madproject.studybuddy;
 
-import android.app.AlertDialog;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class NotesFragment extends Fragment {
 
@@ -32,20 +22,15 @@ public class NotesFragment extends Fragment {
     private List<Note> noteList;
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
-    private FloatingActionButton fabAddNote; // FAB Tanımladık
 
-    public NotesFragment() {
-        // Boş constructor
-    }
+    public NotesFragment() { }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_notes_list, container, false);
 
-        // View tanımlamaları
         recyclerView = view.findViewById(R.id.notesRecyclerView);
-
         recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
 
         noteList = new ArrayList<>();
@@ -60,53 +45,26 @@ public class NotesFragment extends Fragment {
         return view;
     }
 
-
-    // Firebase'e Kaydetme Fonksiyonu
-    private void saveNoteToFirebase(String title, String content) {
+    private void loadNotes() {
         if (mAuth.getCurrentUser() == null) return;
 
-        String userId = mAuth.getCurrentUser().getUid();
+        String currentUserId = mAuth.getCurrentUser().getUid();
 
-        // Önce kullanıcının adını 'users' koleksiyonundan çekelim
-        // Çünkü notu kaydederken ismini de ekleyeceğiz.
-        db.collection("users").document(userId).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    String userName = "Anonim Öğrenci";
-                    if (documentSnapshot.exists() && documentSnapshot.getString("fullName") != null) {
-                        userName = documentSnapshot.getString("fullName");
-                    }
+        // ARTIK 'posts' KOLEKSİYONUNDAN ÇEKİYORUZ
+        db.collection("posts")
+                .whereEqualTo("userId", currentUserId)
+                .whereEqualTo("postType", "NOTE") // Sadece NOT olanları getir
+                .addSnapshotListener((value, error) -> { // get() yerine addSnapshotListener ile anlık güncelleme
+                    if (error != null) return;
 
-                    // Not nesnesini oluştur
-                    String noteId = UUID.randomUUID().toString(); // Rastgele ID
-                    // Not modelinde userName alanını eklediğini varsayıyorum!
-                    Note newNote = new Note(noteId, title, content, userId);
-                    newNote.setUserName(userName); // Notu kimin yazdığını ekle
-
-                    // Veritabanına yaz
-                    db.collection("notes").document(noteId).set(newNote)
-                            .addOnSuccessListener(aVoid -> {
-                                Toast.makeText(getContext(), "Not paylaşıldı!", Toast.LENGTH_SHORT).show();
-                                loadNotes(); // Listeyi yenile
-                            })
-                            .addOnFailureListener(e -> {
-                                Toast.makeText(getContext(), "Hata: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                            });
-                });
-    }
-
-    private void loadNotes() {
-
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
-        // Tüm notları çek (Filtre yok, herkes görebilir)
-        db.collection("notes")
-                .whereEqualTo("userId", currentUserId) // "userId" veritabanınızda kullanıcı id'sini tuttuğunuz alan olmalı
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
+                    if (value != null) {
                         noteList.clear();
-                        for (DocumentSnapshot snapshot : queryDocumentSnapshots) {
+                        for (DocumentSnapshot snapshot : value.getDocuments()) {
                             Note note = snapshot.toObject(Note.class);
+
+                            // KRİTİK: Silme işlemi için ID'yi Firebase belgesinden alıp objeye koymalıyız
+                            note.setNoteId(snapshot.getId());
+
                             noteList.add(note);
                         }
                         adapter.notifyDataSetChanged();

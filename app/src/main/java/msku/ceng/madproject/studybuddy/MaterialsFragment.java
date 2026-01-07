@@ -1,71 +1,63 @@
 package msku.ceng.madproject.studybuddy;
 
-import android.content.Context;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import java.util.ArrayList;
+import java.util.List;
 
-import msku.ceng.madproject.studybuddy.placeholder.PlaceholderContent;
-
-/**
- * A fragment representing a list of Items.
- */
 public class MaterialsFragment extends Fragment {
 
-    // TODO: Customize parameter argument names
-    private static final String ARG_COLUMN_COUNT = "column-count";
-    // TODO: Customize parameters
-    private int mColumnCount = 1;
+    private RecyclerView recyclerView;
+    private MyMaterialsRecyclerViewAdapter adapter;
+    private List<Material> materialList;
+    private FirebaseFirestore db;
 
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
-    public MaterialsFragment() {
-    }
-
-    // TODO: Customize parameter initialization
-    @SuppressWarnings("unused")
-    public static MaterialsFragment newInstance(int columnCount) {
-        MaterialsFragment fragment = new MaterialsFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        if (getArguments() != null) {
-            mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
-        }
-    }
+    public MaterialsFragment() { }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // fragment_materials_list.xml oluşturduğunu varsayıyorum
         View view = inflater.inflate(R.layout.fragment_materials_list, container, false);
 
-        // Set the adapter
-        if (view instanceof RecyclerView) {
-            Context context = view.getContext();
-            RecyclerView recyclerView = (RecyclerView) view;
-            if (mColumnCount <= 1) {
-                recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            } else {
-                recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
-            }
-            recyclerView.setAdapter(new MyMaterialsRecyclerViewAdapter(PlaceholderContent.ITEMS));
-        }
+        recyclerView = view.findViewById(R.id.materialsRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
+
+        materialList = new ArrayList<>();
+        adapter = new MyMaterialsRecyclerViewAdapter(materialList);
+        recyclerView.setAdapter(adapter);
+
+        db = FirebaseFirestore.getInstance();
+        loadMaterials();
+
         return view;
+    }
+
+    private void loadMaterials() {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        // "materials" koleksiyonundan verileri çek
+        db.collection("posts")
+                .whereEqualTo("userId", currentUserId)
+                .whereEqualTo("postType", "MATERIAL")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        materialList.clear();
+                        for (DocumentSnapshot snapshot : queryDocumentSnapshots) {
+                            Material material = snapshot.toObject(Material.class);
+                            materialList.add(material);
+                        }
+                        adapter.notifyDataSetChanged();
+                    }
+                });
     }
 }
