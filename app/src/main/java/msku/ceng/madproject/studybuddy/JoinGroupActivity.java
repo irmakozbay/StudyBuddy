@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
@@ -65,7 +66,14 @@ public class JoinGroupActivity extends BaseActivity {
         db.collection("groups").addSnapshotListener((value, error) -> {
             if (value != null) {
                 fullGroupList.clear();
-                for (DocumentSnapshot doc : value.getDocuments()) { fullGroupList.add(doc.toObject(Group.class)); }
+                for (DocumentSnapshot doc : value.getDocuments()) {
+                    Group group = doc.toObject(Group.class);
+                    if (group != null) {
+                        // KRİTİK: Firebase'den gelen döküman ID'sini modele set ediyoruz
+                        group.setId(doc.getId());
+                        fullGroupList.add(group);
+                    }
+                }
                 groupList.clear();
                 groupList.addAll(fullGroupList);
                 adapter.notifyDataSetChanged();
@@ -81,7 +89,6 @@ public class JoinGroupActivity extends BaseActivity {
         adapter.updateList(filteredList);
     }
 
-    // --- ADAPTER VE VIEWHOLDER KISMI --- (Aynı kalacak şekilde devam eder)
     private class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
         private List<Group> list;
         public GroupAdapter(List<Group> list) { this.list = list; }
@@ -99,7 +106,7 @@ public class JoinGroupActivity extends BaseActivity {
             Group group = list.get(position);
             holder.tvName.setText(group.getName());
             holder.tvDesc.setText(group.getDescription());
-            holder.imgIcon.setImageResource(group.getIconResId());
+            // İkon varsa set et
             holder.itemView.setOnClickListener(v -> {
                 new AlertDialog.Builder(JoinGroupActivity.this)
                         .setTitle("Join Group")
@@ -110,14 +117,37 @@ public class JoinGroupActivity extends BaseActivity {
         }
 
         private void joinGroup(Group group) {
-            db.collection("users").document("user_1").collection("my_groups").document(group.getId()).set(group)
-                    .addOnSuccessListener(aVoid -> Toast.makeText(JoinGroupActivity.this, "Joined!", Toast.LENGTH_SHORT).show());
+            if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+                Toast.makeText(JoinGroupActivity.this, "Please login first!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+            // Eğer group.getId() hala null ise döküman oluşturulamaz
+            String groupId = group.getId();
+            if (groupId == null) {
+                Toast.makeText(JoinGroupActivity.this, "Error: Group ID is null", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            db.collection("users").document(uId)
+                    .collection("my_groups")
+                    .document(groupId)
+                    .set(group)
+                    .addOnSuccessListener(aVoid -> Toast.makeText(JoinGroupActivity.this, "Joined successfully!", Toast.LENGTH_SHORT).show())
+                    .addOnFailureListener(e -> Toast.makeText(JoinGroupActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
         }
 
         @Override public int getItemCount() { return list.size(); }
         class GroupViewHolder extends RecyclerView.ViewHolder {
             TextView tvName, tvDesc; ImageView imgIcon;
-            public GroupViewHolder(@NonNull View v) { super(v); tvName = v.findViewById(R.id.tv_group_name); tvDesc = v.findViewById(R.id.tv_group_description); imgIcon = v.findViewById(R.id.img_group_icon); }
+            public GroupViewHolder(@NonNull View v) {
+                super(v);
+                tvName = v.findViewById(R.id.tv_group_name);
+                tvDesc = v.findViewById(R.id.tv_group_description);
+                imgIcon = v.findViewById(R.id.img_group_icon);
+            }
         }
     }
 }

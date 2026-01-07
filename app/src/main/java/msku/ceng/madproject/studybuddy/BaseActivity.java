@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.widget.ImageButton;
 import androidx.appcompat.app.AppCompatActivity;
 
-// ABSTRACT olması şart, yoksa miras alan sınıflar hata verir
 public abstract class BaseActivity extends AppCompatActivity {
 
     protected void setupNavbar() {
