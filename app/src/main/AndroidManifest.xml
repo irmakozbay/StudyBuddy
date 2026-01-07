@@ -38,6 +38,8 @@
         <activity
             android:name=".JoinGroupActivity"
             android:exported="false" />
+        <activity
+            android:name=".ProfileActivity" />
     </application>
 
 </manifest>
