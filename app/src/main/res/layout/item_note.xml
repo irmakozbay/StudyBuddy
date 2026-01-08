@@ -5,35 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
-    android:background="@drawable/bg_rounded_grey"> <androidx.cardview.widget.CardView
-    android:id="@+id/cardIcon"
-    android:layout_width="50dp"
-    android:layout_height="50dp"
-    android:layout_margin="16dp"
-    app:cardCornerRadius="25dp"
-    app:cardBackgroundColor="#455A64"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintBottom_toBottomOf="parent">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="A"
-        android:textColor="@android:color/white"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_gravity="center"/>
-</androidx.cardview.widget.CardView>
+    android:background="@drawable/bg_rounded_grey"
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintStart_toEndOf="@id/cardIcon"
-        app:layout_constraintEnd_toStartOf="@id/rightIcon"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnDeleteNote"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
@@ -41,7 +22,7 @@
             android:id="@+id/noteTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Note 1"
+            android:text="Note Title"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/text_dark"/>
@@ -50,18 +31,20 @@
             android:id="@+id/noteContent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Subhead"
+            android:layout_marginTop="4dp"
+            android:text="Note content goes here..."
             android:textSize="14sp"
+            android:maxLines="2"
+            android:ellipsize="end"
             android:textColor="@color/text_grey"/>
     </LinearLayout>
 
     <ImageView
-        android:id="@+id/rightIcon"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginEnd="16dp"
-        android:src="@drawable/ic_launcher_background"
-        app:tint="@color/text_grey"
+        android:id="@+id/btnDeleteNote"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@android:drawable/ic_menu_delete"
+        app:tint="#D32F2F"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>

@@ -2,9 +2,11 @@ package msku.ceng.madproject.studybuddy;
 
 import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,36 +32,54 @@ public class MyMaterialsRecyclerViewAdapter extends RecyclerView.Adapter<MyMater
     public void onBindViewHolder(final ViewHolder holder, int position) {
         Material material = mValues.get(position);
 
-        // Material sınıfındaki getter metodlarını kullandığından emin ol
         holder.mTitleView.setText(material.getTitle());
-        // Veritabanında "content" olarak kayıtlı, sınıfında da getContent() olmalı
-        holder.mSubheadView.setText(material.getDescription());
+        holder.mSubheadView.setText(material.getContent());
 
-        // SİLME BUTONU İŞLEVİ
-        holder.deleteButton.setOnClickListener(v -> {
+        // 1. Karta tıklayınca -> DETAY AÇILSIN (Silinmesin)
+// Karta Tıklama (Detay Açma)
+        holder.itemView.setOnClickListener(v -> {
             Context context = v.getContext();
+            Intent intent = new Intent(context, PostDetailActivity.class);
 
-            // Material sınıfında ID'yi tutan getter metodu (getMaterialId veya getId)
-            String materialId = material.getMaterialId();
+            // Verileri paketleyip gönderiyoruz
+            intent.putExtra("title", material.getTitle());
+            intent.putExtra("content", material.getContent()); // Getter ismin farklıysa düzelt (getDescription vb.)
 
-            if (materialId == null || materialId.isEmpty()) {
-                Toast.makeText(context, "Hata: Materyal ID bulunamadı", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // DÜZELTME: "notes" yerine "posts" koleksiyonundan siliyoruz
-            FirebaseFirestore.getInstance().collection("posts").document(materialId)
-                    .delete()
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(context, "Materyal silindi", Toast.LENGTH_SHORT).show();
-                        // Listeden silip animasyonla güncelleme (Opsiyonel, SnapshotListener varsa otomatik de olur)
-                        // mValues.remove(holder.getAdapterPosition());
-                        // notifyItemRemoved(holder.getAdapterPosition());
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(context, "Silinemedi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
+            context.startActivity(intent);
         });
+
+        // 2. Çöp Kutusuna tıklayınca -> SİLİNSİN
+        holder.deleteButton.setOnClickListener(v -> {
+            String id = material.getMaterialId();
+            if (id != null && !id.isEmpty()) {
+                // Firebase silme işlemi
+                FirebaseFirestore.getInstance().collection("posts").document(id)
+                        .delete()
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(v.getContext(), "Başarıyla silindi", Toast.LENGTH_SHORT).show();
+
+                            // Listeden görsel olarak da anında kaldırmak için:
+                            mValues.remove(position);
+                            notifyItemRemoved(position);
+                            notifyItemRangeChanged(position, mValues.size());
+                        });
+            }
+        });
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder {
+        public final TextView mTitleView;
+        public final TextView mSubheadView;
+        public final ImageView deleteButton; // Yeni butonu buraya ekliyoruz
+
+        public ViewHolder(ItemMaterialBinding binding) {
+            super(binding.getRoot());
+            mTitleView = binding.materialTitle;
+            mSubheadView = binding.materialSubhead;
+
+            // XML'deki ID ile bağlıyoruz
+            deleteButton = binding.btnDelete;
+        }
     }
 
     @Override
@@ -67,20 +87,4 @@ public class MyMaterialsRecyclerViewAdapter extends RecyclerView.Adapter<MyMater
         return mValues.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        public final TextView mTitleView;
-        public final TextView mSubheadView;
-        public final View deleteButton; // Silme butonu tanımı
-
-        public ViewHolder(ItemMaterialBinding binding) {
-            super(binding.getRoot());
-            mTitleView = binding.materialTitle;
-            mSubheadView = binding.materialSubhead; // XML'deki ID'ye göre değişebilir
-
-            // XML'de bir silme butonu eklediysen onun ID'sini buraya yazmalısın.
-            // Örnek: deleteButton = binding.btnDeleteMaterial;
-            // Şimdilik root atadım hata vermesin diye ama XML'deki butonu bağlamalısın.
-            deleteButton = binding.getRoot();
-        }
-    }
 }

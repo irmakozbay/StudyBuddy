@@ -47,9 +47,10 @@ public class AddPostActivity extends AppCompatActivity {
         rbMaterial = findViewById(R.id.rbMaterial);
         btnSharePost = findViewById(R.id.btnSharePost);
         btnClose = findViewById(R.id.btnClose);
-
-        // Kapatma butonu
-        btnClose.setOnClickListener(v -> finish());
+        // Tıklama Olayı: Bu kodu eklemezsen butona basınca hiçbir şey olmaz
+        btnClose.setOnClickListener(v -> {
+            finish(); // Bu komut "Sayfayı kapat ve önceki sayfaya dön" demektir
+        });
 
         // Paylaş Butonu
         btnSharePost.setOnClickListener(v -> savePost());

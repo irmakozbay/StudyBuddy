@@ -2,10 +2,12 @@ package msku.ceng.madproject.studybuddy;
 
 import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.ImageView; // ImageView eklendi
 import android.widget.Toast;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.List;
@@ -31,6 +33,20 @@ public class MyNotesRecyclerViewAdapter extends RecyclerView.Adapter<MyNotesRecy
         holder.mTitleView.setText(note.getTitle());
         holder.mContentView.setText(note.getContent());
 
+        // 1. Karta Tıklama (Görüntüleme/Düzenleme)
+        // Karta Tıklama (Detay Açma)
+        holder.itemView.setOnClickListener(v -> {
+            Context context = v.getContext();
+            Intent intent = new Intent(context, PostDetailActivity.class);
+
+            // Verileri paketleyip gönderiyoruz
+            intent.putExtra("title", note.getTitle());
+            intent.putExtra("content", note.getContent());
+
+            context.startActivity(intent);
+        });
+
+        // 2. Silme Butonuna Tıklama (Silme İşlemi)
         holder.deleteButton.setOnClickListener(v -> {
             Context context = v.getContext();
             String noteId = note.getNoteId();
@@ -40,14 +56,16 @@ public class MyNotesRecyclerViewAdapter extends RecyclerView.Adapter<MyNotesRecy
                 return;
             }
 
-            // DÜZELTME: "notes" yerine "posts" koleksiyonundan siliyoruz
+            // Firestore'dan silme işlemi ("posts" koleksiyonundan)
             FirebaseFirestore.getInstance().collection("posts").document(noteId)
                     .delete()
                     .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(context, "Not silindi", Toast.LENGTH_SHORT).show();
-                        // Not: addSnapshotListener kullandığımız için remove işlemini
-                        // manuel yapmaya gerek kalmayabilir, liste otomatik güncellenir.
-                        // Ama görsel akıcılık için durabilir.
+                        Toast.makeText(context, "Not başarıyla silindi", Toast.LENGTH_SHORT).show();
+
+                        // Listeden anlık silmek için:
+                        mValues.remove(position);
+                        notifyItemRemoved(position);
+                        notifyItemRangeChanged(position, mValues.size());
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(context, "Silinemedi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -63,16 +81,15 @@ public class MyNotesRecyclerViewAdapter extends RecyclerView.Adapter<MyNotesRecy
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final TextView mTitleView;
         public final TextView mContentView;
-        public final View deleteButton;
+        public final ImageView deleteButton; // View yerine ImageView kullanmak daha iyi
 
         public ViewHolder(ItemNoteBinding binding) {
             super(binding.getRoot());
             mTitleView = binding.noteTitle;
             mContentView = binding.noteContent;
 
-            // XML'de id'si neyse onu kullan (Örn: btnDelete)
-            // Eğer binding'de bulamıyorsa binding.btnDeleteNote gibi kontrol et
-            deleteButton = binding.getRoot(); // Burayı kendi XML id'ne göre güncelle!
+            // XML'de verdiğimiz yeni ID'yi buraya bağlıyoruz
+            deleteButton = binding.btnDeleteNote;
         }
     }
 }

@@ -3,7 +3,7 @@ package msku.ceng.madproject.studybuddy;
 public class Material {
     private String materialId;
     private String title;
-    private String description; // "Subhead" dediğin kısım
+    private String content; // "Subhead" dediğin kısım
     private String userId;
     private String postType;
 
@@ -12,7 +12,7 @@ public class Material {
     public Material(String materialId, String title, String description, String userId) {
         this.materialId = materialId;
         this.title = title;
-        this.description = description;
+        this. content = content;
         this.userId = userId;
     }
 
@@ -23,8 +23,8 @@ public class Material {
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getContent() { return content; }
+    public void setContent(String description) { this.content = description; }
 
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }

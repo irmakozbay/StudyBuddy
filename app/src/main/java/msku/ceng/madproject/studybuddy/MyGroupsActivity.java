@@ -67,10 +67,6 @@ public class MyGroupsActivity extends BaseActivity {
                 });
     }
 
-    @Override
-    protected void onProfileRequest() {
-
-    }
 
     private class MyGroupAdapter extends RecyclerView.Adapter<MyGroupAdapter.ViewHolder> {
         private List<Group> list;

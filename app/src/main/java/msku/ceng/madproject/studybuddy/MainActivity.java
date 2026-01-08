@@ -46,6 +46,12 @@ public class MainActivity extends BaseActivity {
         if(btnCreateGroup != null) btnCreateGroup.setOnClickListener(v -> startActivity(new Intent(this, CreateGroupActivity.class)));
         if(btnStatistics != null) btnStatistics.setOnClickListener(v -> startActivity(new Intent(this, ActivityStatistics.class)));
         if(btnActivities != null) btnActivities.setOnClickListener(v -> startActivity(new Intent(this, UpdateStatsActivity.class)));
+        if(btnAddPost != null) {
+            btnAddPost.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, AddPostActivity.class);
+                startActivity(intent);
+            });
+        }
 
         // 3. Profil isteği geldiyse (Navbardan veya başka yerden)
         if ("PROFILE".equals(getIntent().getStringExtra("OPEN_FRAGMENT"))) {

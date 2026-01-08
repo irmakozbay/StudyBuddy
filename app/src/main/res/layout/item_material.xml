@@ -14,55 +14,51 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <ImageView
-            android:id="@+id/iconMaterial"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/ic_launcher_background"
-            android:contentDescription="Material Icon"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="#37474F" />
-
         <TextView
             android:id="@+id/materialTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
             android:layout_marginEnd="8dp"
             android:text="Study Material 1"
             android:textColor="#000000"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@+id/btnDownload"
-            app:layout_constraintStart_toEndOf="@+id/iconMaterial"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/materialSubhead"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
             android:layout_marginTop="4dp"
             android:layout_marginEnd="8dp"
             android:text="Subhead"
             android:textColor="#546E7A"
             android:textSize="14sp"
             app:layout_constraintEnd_toStartOf="@+id/btnDownload"
-            app:layout_constraintStart_toEndOf="@+id/iconMaterial"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/materialTitle" />
 
         <ImageView
             android:id="@+id/btnDownload"
             android:layout_width="32dp"
             android:layout_height="32dp"
+            android:layout_marginEnd="12dp"
             android:src="@android:drawable/stat_sys_download"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnDelete"
             app:layout_constraintTop_toTopOf="parent"
             app:tint="#78909C" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <ImageView
+            android:id="@+id/btnDelete"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@android:drawable/ic_menu_delete"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="#D32F2F" /> </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.cardview.widget.CardView>
