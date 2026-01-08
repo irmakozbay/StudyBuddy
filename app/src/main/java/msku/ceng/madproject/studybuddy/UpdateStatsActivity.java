@@ -2,6 +2,7 @@ package msku.ceng.madproject.studybuddy;
 
 import android.app.DatePickerDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,10 +12,14 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class UpdateStatsActivity extends AppCompatActivity {
@@ -26,6 +31,10 @@ public class UpdateStatsActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private String selectedDate;
     private long selectedTimestamp;
+
+    // Dinamik grup listesi için değişkenler
+    private List<String> joinedGroupNames = new ArrayList<>();
+    private ArrayAdapter<String> spinnerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +56,7 @@ public class UpdateStatsActivity extends AppCompatActivity {
         updateSelectedDate(calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONTH), calendar.get(Calendar.YEAR));
         selectedTimestamp = calendar.getTimeInMillis();
 
-        // Geri Butonu İşlemi
+        // Geri Butonu
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> finish());
         }
@@ -66,18 +75,44 @@ public class UpdateStatsActivity extends AppCompatActivity {
                     btnSelectDate.setText("Selected Date: " + selectedDate);
                 }
             }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-
             datePicker.getDatePicker().setMaxDate(System.currentTimeMillis());
             datePicker.show();
         });
 
-        // Spinner Grupları
-        String[] groups = {"Math Wizards", "Code & Coffee", "Design Thinkers"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, groups);
-        spinnerGroups.setAdapter(adapter);
+        // Spinner'ı Dinamik Olarak Hazırla
+        spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, joinedGroupNames);
+        spinnerGroups.setAdapter(spinnerAdapter);
+
+        // KULLANICININ KATILDIĞI GRUPLARI ÇEK
+        fetchJoinedGroups();
 
         // Kaydetme İşlemi
         btnUpdate.setOnClickListener(v -> saveToFirebase());
+    }
+
+    private void fetchJoinedGroups() {
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) return;
+        String uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        // Sadece kullanıcının kendi altındaki my_groups koleksiyonunu oku
+        db.collection("users").document(uId).collection("my_groups")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    joinedGroupNames.clear();
+                    for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                        String name = doc.getString("name");
+                        if (name != null) joinedGroupNames.add(name);
+                    }
+
+                    if (joinedGroupNames.isEmpty()) {
+                        joinedGroupNames.add("Lütfen önce bir gruba katılın");
+                        btnUpdate.setEnabled(false);
+                    } else {
+                        btnUpdate.setEnabled(true);
+                    }
+                    spinnerAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> Log.e("UpdateStats", "Gruplar çekilemedi", e));
     }
 
     private void updateSelectedDate(int day, int month, int year) {
@@ -85,8 +120,10 @@ public class UpdateStatsActivity extends AppCompatActivity {
     }
 
     private void saveToFirebase() {
-        String hoursStr = etHours.getText().toString().trim();
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) return;
+        String uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
+        String hoursStr = etHours.getText().toString().trim();
         if (hoursStr.isEmpty()) {
             Toast.makeText(this, "Please enter study hours", Toast.LENGTH_SHORT).show();
             return;
@@ -97,19 +134,15 @@ public class UpdateStatsActivity extends AppCompatActivity {
             String group = spinnerGroups.getSelectedItem().toString();
             String note = etNote.getText().toString().trim();
 
-            if (selectedTimestamp > System.currentTimeMillis()) {
-                Toast.makeText(this, "Future dates are not allowed!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
             Map<String, Object> log = new HashMap<>();
             log.put("groupName", group);
             log.put("hours", hours);
             log.put("note", note);
             log.put("date", selectedDate);
-            log.put("timestamp", selectedTimestamp); // Grafik senkronizasyonu için
+            log.put("timestamp", selectedTimestamp);
 
-            db.collection("users").document("user_1").collection("study_logs")
+            // Dinamik uId yoluyla kaydet
+            db.collection("users").document(uId).collection("study_logs")
                     .add(log)
                     .addOnSuccessListener(ref -> {
                         Toast.makeText(this, "Data synced!", Toast.LENGTH_SHORT).show();

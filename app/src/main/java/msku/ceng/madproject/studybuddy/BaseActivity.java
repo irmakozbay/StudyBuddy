@@ -19,13 +19,13 @@ public abstract class BaseActivity extends AppCompatActivity {
             });
         }
 
-//        if (navNotifications != null) {
-//            navNotifications.setOnClickListener(v -> {
-//                if (!(this instanceof NotificationsActivity)) {
-//                    startActivity(new Intent(this, NotificationsActivity.class));
-//                }
-//            });
-//        }
+        if (navNotifications != null) {
+            navNotifications.setOnClickListener(v -> {
+                if (!(this instanceof NotificationsActivity)) {
+                    startActivity(new Intent(this, NotificationsActivity.class));
+                }
+            });
+        }
 
         if (navProfile != null) {
             navProfile.setOnClickListener(v -> {

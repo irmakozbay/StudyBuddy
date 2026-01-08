@@ -27,4 +27,5 @@ public class Group {
     public String getName() { return name; }
     public String getDescription() { return description; }
     public int getIconResId() { return iconResId; }
+
 }
