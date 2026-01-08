@@ -1,21 +1,18 @@
 package msku.ceng.madproject.studybuddy;
 
-import androidx.annotation.NonNull;
+/*Irmak Özbay*/
+
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore; // Eklendi
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +22,7 @@ public class RegisterActivity extends AppCompatActivity {
     private static final String TAG = "RegisterActivity";
     private EditText registerNameSurname, registerEmail, registerUsername, registerPassword;
     private FirebaseAuth mAuth;
-    private FirebaseFirestore db; // Veritabanı referansı
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +30,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance(); // Veritabanını başlat
+        db = FirebaseFirestore.getInstance();
 
         registerNameSurname = findViewById(R.id.registerNameSurname);
         registerEmail = findViewById(R.id.registerEmail);
@@ -51,27 +48,25 @@ public class RegisterActivity extends AppCompatActivity {
         String password = registerPassword.getText().toString().trim();
 
         if (nameSurname.isEmpty() || email.isEmpty() || username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Lütfen tüm alanları doldurun.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please fill all fields.", Toast.LENGTH_SHORT).show();
             return;
         }
         if (password.length() < 6) {
-            Toast.makeText(this, "Şifre en az 6 karakter olmalı.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Password should be at least 6 characters.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 1. Authentication ile Kullanıcı Oluştur
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        Log.d(TAG, "Kayıt başarılı, veritabanına yazılıyor...");
+                        Log.d(TAG, "Register successes, loading to database.");
                         FirebaseUser user = mAuth.getCurrentUser();
 
-                        // 2. Veritabanına Kullanıcı Detaylarını Kaydet
                         saveUserToFirestore(user, nameSurname, username, email);
 
                     } else {
-                        Log.w(TAG, "Kayıt hatası", task.getException());
-                        Toast.makeText(RegisterActivity.this, "Kayıt başarısız: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                        Log.w(TAG, "Register failed: ", task.getException());
+                        Toast.makeText(RegisterActivity.this, "Register fails: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -79,18 +74,15 @@ public class RegisterActivity extends AppCompatActivity {
     private void saveUserToFirestore(FirebaseUser user, String name, String username, String email) {
         if (user == null) return;
 
-        // Veritabanına gidecek veri paketi
         Map<String, Object> userData = new HashMap<>();
         userData.put("userId", user.getUid());
         userData.put("fullName", name);
         userData.put("userName", username);
         userData.put("email", email);
-        userData.put("bio", "Merhaba! Ben StudyBuddy kullanıyorum."); // Varsayılan bio
-        // İstersen followers, following gibi sayıları da 0 olarak başlatabilirsin
+        userData.put("bio", "Merhaba! Ben StudyBuddy kullanıyorum.");
         userData.put("followers", 0);
         userData.put("following", 0);
 
-        // 'users' koleksiyonunda, kullanıcının kendi ID'si ile döküman oluştur
         db.collection("users").document(user.getUid())
                 .set(userData)
                 .addOnSuccessListener(aVoid -> {

@@ -1,5 +1,7 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Bahriye Gavaz*/
+
 import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.util.Log;
@@ -32,7 +34,6 @@ public class UpdateStatsActivity extends AppCompatActivity {
     private String selectedDate;
     private long selectedTimestamp;
 
-    // Dinamik grup listesi için değişkenler
     private List<String> joinedGroupNames = new ArrayList<>();
     private ArrayAdapter<String> spinnerAdapter;
 
@@ -43,7 +44,6 @@ public class UpdateStatsActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
-        // View Bağlamaları
         etHours = findViewById(R.id.etHours);
         etNote = findViewById(R.id.etNote);
         spinnerGroups = findViewById(R.id.spinnerGroups);
@@ -51,12 +51,10 @@ public class UpdateStatsActivity extends AppCompatActivity {
         btnSelectDate = findViewById(R.id.btnSelectDate);
         btnBack = findViewById(R.id.btnBack);
 
-        // Başlangıç Ayarları
         Calendar calendar = Calendar.getInstance();
         updateSelectedDate(calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONTH), calendar.get(Calendar.YEAR));
         selectedTimestamp = calendar.getTimeInMillis();
 
-        // Geri Butonu
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> finish());
         }
@@ -79,14 +77,11 @@ public class UpdateStatsActivity extends AppCompatActivity {
             datePicker.show();
         });
 
-        // Spinner'ı Dinamik Olarak Hazırla
         spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, joinedGroupNames);
         spinnerGroups.setAdapter(spinnerAdapter);
 
-        // KULLANICININ KATILDIĞI GRUPLARI ÇEK
         fetchJoinedGroups();
 
-        // Kaydetme İşlemi
         btnUpdate.setOnClickListener(v -> saveToFirebase());
     }
 
@@ -94,7 +89,6 @@ public class UpdateStatsActivity extends AppCompatActivity {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) return;
         String uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // Sadece kullanıcının kendi altındaki my_groups koleksiyonunu oku
         db.collection("users").document(uId).collection("my_groups")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
@@ -105,14 +99,14 @@ public class UpdateStatsActivity extends AppCompatActivity {
                     }
 
                     if (joinedGroupNames.isEmpty()) {
-                        joinedGroupNames.add("Lütfen önce bir gruba katılın");
+                        joinedGroupNames.add("Please first join a group.");
                         btnUpdate.setEnabled(false);
                     } else {
                         btnUpdate.setEnabled(true);
                     }
                     spinnerAdapter.notifyDataSetChanged();
                 })
-                .addOnFailureListener(e -> Log.e("UpdateStats", "Gruplar çekilemedi", e));
+                .addOnFailureListener(e -> Log.e("UpdateStats", "Groups couldn't load.", e));
     }
 
     private void updateSelectedDate(int day, int month, int year) {

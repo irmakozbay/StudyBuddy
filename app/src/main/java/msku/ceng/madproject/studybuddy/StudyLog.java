@@ -1,5 +1,7 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Bahriye Gavaz*/
+
 public class StudyLog {
     public String groupName;
     public double hours;

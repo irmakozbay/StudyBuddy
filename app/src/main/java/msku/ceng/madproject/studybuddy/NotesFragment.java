@@ -1,11 +1,11 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Irmak Özbay*/
+
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,16 +27,13 @@ public class NotesFragment extends Fragment {
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
 
-    public NotesFragment() {
-        // Boş constructor gerekli
-    }
+    public NotesFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_notes_list, container, false);
 
-        // RecyclerView Tanımlamaları
         recyclerView = view.findViewById(R.id.notesRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
 
@@ -44,11 +41,9 @@ public class NotesFragment extends Fragment {
         adapter = new MyNotesRecyclerViewAdapter(noteList);
         recyclerView.setAdapter(adapter);
 
-        // Firebase Başlatma
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
 
-        // Verileri Yükle
         loadNotes();
 
         return view;
@@ -58,14 +53,12 @@ public class NotesFragment extends Fragment {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) return;
 
-        // "posts" koleksiyonundan sadece "NOTE" tipindekileri dinliyoruz
         db.collection("posts")
                 .whereEqualTo("userId", currentUser.getUid())
-                .whereEqualTo("postType", "NOTE") // Sadece notları getir
-                .orderBy("timestamp", Query.Direction.DESCENDING) // (Opsiyonel) Yeniden eskiye sıralama
+                .whereEqualTo("postType", "NOTE")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
                 .addSnapshotListener((value, error) -> {
                     if (error != null) {
-                        // Hata olursa loglanabilir
                         return;
                     }
 
@@ -74,7 +67,6 @@ public class NotesFragment extends Fragment {
                         for (DocumentSnapshot snapshot : value.getDocuments()) {
                             Note note = snapshot.toObject(Note.class);
 
-                            // KRİTİK ADIM: Silme işlemi için ID'yi set ediyoruz
                             if (note != null) {
                                 note.setNoteId(snapshot.getId());
                                 noteList.add(note);

@@ -1,5 +1,7 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Bahriye Gavaz*/
+
 public class Notification {
     private String title;
     private String message;

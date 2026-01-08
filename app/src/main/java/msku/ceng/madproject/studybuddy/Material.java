@@ -1,13 +1,15 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Irmak Özbay*/
+
 public class Material {
     private String materialId;
     private String title;
-    private String content; // "Subhead" dediğin kısım
+    private String content;
     private String userId;
     private String postType;
 
-    public Material() { } // Firebase için boş constructor
+    public Material() { }
 
     public Material(String materialId, String title, String description, String userId) {
         this.materialId = materialId;
@@ -16,7 +18,6 @@ public class Material {
         this.userId = userId;
     }
 
-    // Getter ve Setterlar
     public String getMaterialId() { return materialId; }
     public void setMaterialId(String materialId) { this.materialId = materialId; }
 

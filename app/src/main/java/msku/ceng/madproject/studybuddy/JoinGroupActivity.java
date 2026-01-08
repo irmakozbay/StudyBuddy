@@ -1,5 +1,7 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Bahriye Gavaz*/
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -34,7 +36,6 @@ public class JoinGroupActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_join_group);
 
-        // BaseActivity içindeki navbar kurulumunu senin ID'lerine göre yaptık
         setupNavbar();
 
         db = FirebaseFirestore.getInstance();
@@ -46,7 +47,6 @@ public class JoinGroupActivity extends BaseActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        // ScrollView içinde RecyclerView olduğu için akışı bozmaması adına:
         recyclerView.setNestedScrollingEnabled(false);
 
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
@@ -103,8 +103,7 @@ public class JoinGroupActivity extends BaseActivity {
                 .set(group)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(JoinGroupActivity.this, "Joined successfully!", Toast.LENGTH_SHORT).show();
-                    // OTOMATİK BİLDİRİM GÖNDERME
-                    sendNotification("Yeni Grup!", group.getName() + " grubuna başarıyla katıldınız.");
+                    sendNotification("New Group!", group.getName() + " joined the group successfully.");
                 });
     }
 
@@ -134,9 +133,9 @@ public class JoinGroupActivity extends BaseActivity {
             holder.itemView.setOnClickListener(v -> {
                 new AlertDialog.Builder(JoinGroupActivity.this)
                         .setTitle("Join Group")
-                        .setMessage(group.getName() + " grubuna katılmak istiyor musunuz?")
-                        .setPositiveButton("Evet", (dialog, which) -> joinGroup(group))
-                        .setNegativeButton("Hayır", null).show();
+                        .setMessage( "Would you like to join " + group.getName() + "?")
+                        .setPositiveButton("Yes", (dialog, which) -> joinGroup(group))
+                        .setNegativeButton("No", null).show();
             });
         }
 

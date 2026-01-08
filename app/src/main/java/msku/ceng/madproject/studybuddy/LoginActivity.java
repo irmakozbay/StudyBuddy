@@ -1,5 +1,7 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Irmak Özbay*/
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;

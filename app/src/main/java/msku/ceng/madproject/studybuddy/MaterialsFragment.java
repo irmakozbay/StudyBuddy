@@ -1,5 +1,7 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Irmak Özbay*/
+
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,9 +26,7 @@ public class MaterialsFragment extends Fragment {
     public MaterialsFragment() { }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // fragment_materials_list.xml oluşturduğunu varsayıyorum
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_materials_list, container, false);
 
         recyclerView = view.findViewById(R.id.materialsRecyclerView);
@@ -45,7 +45,7 @@ public class MaterialsFragment extends Fragment {
 
     private void loadMaterials() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) return; // Kullanıcı yoksa hata vermemesi için önlem
+        if (user == null) return;
 
         String currentUserId = user.getUid();
 
@@ -57,11 +57,8 @@ public class MaterialsFragment extends Fragment {
                     if (!queryDocumentSnapshots.isEmpty()) {
                         materialList.clear();
                         for (DocumentSnapshot snapshot : queryDocumentSnapshots) {
-                            // 1. Nesneyi oluştur
                             Material material = snapshot.toObject(Material.class);
 
-                            // 2. KRİTİK ADIM: ID'yi al ve nesneye set et
-                            // (Material sınıfında setter ismin neyse onu kullan: setPostId veya setMaterialId)
                             if (material != null) {
                                 material.setMaterialId(snapshot.getId());
                                 materialList.add(material);
@@ -71,7 +68,6 @@ public class MaterialsFragment extends Fragment {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    // Hata olursa loglayabilirsin
                     e.printStackTrace();
                 });
     }

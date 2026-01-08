@@ -1,5 +1,7 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Bahriye Gavaz*/
+
 import android.content.Intent;
 import android.widget.ImageButton;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,19 +31,16 @@ public abstract class BaseActivity extends AppCompatActivity {
 
         if (navProfile != null) {
             navProfile.setOnClickListener(v -> {
-                // Fragment olduğu için direkt Main'e yönlendiriyoruz
                 if (!(this instanceof MainActivity)) {
                     Intent intent = new Intent(this, MainActivity.class);
                     intent.putExtra("OPEN_FRAGMENT", "PROFILE");
                     startActivity(intent);
                 } else {
-                    // Zaten Main'deysen bu metodu tetikle
                     onProfileRequest();
                 }
             });
         }
     }
 
-    // Bu metodu her Activity kendi içinde dolduracak (Abstract Metod)
     protected abstract void onProfileRequest();
 }

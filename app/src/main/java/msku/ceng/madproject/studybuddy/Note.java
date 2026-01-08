@@ -1,5 +1,7 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Irmak Özbay*/
+
 public class Note {
     private String noteId;
     private String title;

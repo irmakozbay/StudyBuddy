@@ -1,5 +1,7 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Irmak Özbay*/
+
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
@@ -35,11 +37,9 @@ public class AddPostActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_post);
 
-        // Firebase Başlatma
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
 
-        // Elemanları Tanımlama
         etPostTitle = findViewById(R.id.etPostTitle);
         etPostContent = findViewById(R.id.etPostContent);
         radioGroupType = findViewById(R.id.radioGroupType);
@@ -47,12 +47,10 @@ public class AddPostActivity extends AppCompatActivity {
         rbMaterial = findViewById(R.id.rbMaterial);
         btnSharePost = findViewById(R.id.btnSharePost);
         btnClose = findViewById(R.id.btnClose);
-        // Tıklama Olayı: Bu kodu eklemezsen butona basınca hiçbir şey olmaz
         btnClose.setOnClickListener(v -> {
-            finish(); // Bu komut "Sayfayı kapat ve önceki sayfaya dön" demektir
+            finish();
         });
 
-        // Paylaş Butonu
         btnSharePost.setOnClickListener(v -> savePost());
     }
 
@@ -60,7 +58,6 @@ public class AddPostActivity extends AppCompatActivity {
         String title = etPostTitle.getText().toString().trim();
         String content = etPostContent.getText().toString().trim();
 
-        // 1. Boş alan kontrolü
         if (TextUtils.isEmpty(title)) {
             etPostTitle.setError("Title is required");
             return;
@@ -70,34 +67,30 @@ public class AddPostActivity extends AppCompatActivity {
             return;
         }
 
-        // 2. Kullanıcı Giriş Kontrolü
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
             Toast.makeText(this, "You need to log in first!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 3. Kategori Belirleme (Note mu Material mi?)
-        String postType = "NOTE"; // Varsayılan
+        String postType = "NOTE";
         if (rbMaterial.isChecked()) {
             postType = "MATERIAL";
         }
 
-        // 4. Veritabanına Kaydedilecek Veri Haritası
         Map<String, Object> postMap = new HashMap<>();
-        postMap.put("userId", currentUser.getUid()); // Profilde göstermek için KRİTİK
-        postMap.put("userName", currentUser.getDisplayName()); // Gönderen ismi (Opsiyonel)
+        postMap.put("userId", currentUser.getUid());
+        postMap.put("userName", currentUser.getDisplayName());
         postMap.put("title", title);
         postMap.put("content", content);
-        postMap.put("postType", postType); // Filtreleme için KRİTİK
-        postMap.put("timestamp", FieldValue.serverTimestamp()); // Sıralama için zaman
+        postMap.put("postType", postType);
+        postMap.put("timestamp", FieldValue.serverTimestamp());
 
-        // 5. Firestore'a "posts" koleksiyonuna ekle
         db.collection("posts")
                 .add(postMap)
                 .addOnSuccessListener(documentReference -> {
                     Toast.makeText(AddPostActivity.this, "Post shared successfully!", Toast.LENGTH_SHORT).show();
-                    finish(); // Sayfayı kapat ve ana sayfaya dön
+                    finish();
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(AddPostActivity.this, "Error sharing post: " + e.getMessage(), Toast.LENGTH_LONG).show();

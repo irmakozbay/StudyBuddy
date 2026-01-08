@@ -1,5 +1,7 @@
 package msku.ceng.madproject.studybuddy;
 
+/*Irmak Özbay*/
+
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,13 +25,11 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class EditProfileActivity extends AppCompatActivity {
 
-    // XML'deki elemanların karşılıkları
     TextInputEditText etName, etUsername, etBio;
     CircleImageView imgProfile;
     ImageView imgClose;
     Button btnSave;
 
-    // Veritabanı ve Resim değişkenleri
     Uri imageUri;
     FirebaseFirestore db;
     FirebaseStorage storage;
@@ -40,12 +40,10 @@ public class EditProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
 
-        // Firebase tanımları
         db = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
         auth = FirebaseAuth.getInstance();
 
-        // Bağlamalar
         imgProfile = findViewById(R.id.img_edit_profile);
         imgClose = findViewById(R.id.img_close);
         etName = findViewById(R.id.et_name);
@@ -53,22 +51,18 @@ public class EditProfileActivity extends AppCompatActivity {
         etBio = findViewById(R.id.et_bio);
         btnSave = findViewById(R.id.btn_save);
 
-        // --- DÜZELTME 1: Mevcut Kullanıcı Adını Kutucuğa Doldurma ---
-        String geleniIsim = getIntent().getStringExtra("currentName");
-        String gelenBio = getIntent().getStringExtra("currentBio");
-        // ProfileFragment'tan "currentUsername" gönderdiğinden emin olmalısın (Aşağıda hatırlatma yaptım)
-        String gelenUsername = getIntent().getStringExtra("currentUsername");
+        String currentName = getIntent().getStringExtra("currentName");
+        String currentBio = getIntent().getStringExtra("currentBio");
+        String currentUsername = getIntent().getStringExtra("currentUsername");
 
-        if(geleniIsim != null) etName.setText(geleniIsim);
-        if(gelenBio != null) etBio.setText(gelenBio);
-        if(gelenUsername != null) etUsername.setText(gelenUsername); // Kutucuk dolu gelsin
+        if(currentName != null) etName.setText(currentName);
+        if(currentBio != null) etBio.setText(currentBio);
+        if(currentUsername != null) etUsername.setText(currentUsername);
 
-        // 1. Kapatma tuşu
         if (imgClose != null) {
             imgClose.setOnClickListener(v -> finish());
         }
 
-        // 2. Profil Resmine Tıklayınca Galeri Açma
         imgProfile.setOnClickListener(v -> {
             Intent intent = new Intent();
             intent.setType("image/*");
@@ -76,19 +70,17 @@ public class EditProfileActivity extends AppCompatActivity {
             startActivityForResult(intent, 100);
         });
 
-        // 3. Kaydet Butonu Mantığı
         btnSave.setOnClickListener(v -> {
             updateProfile();
         });
     }
 
-    // Galeriden dönen resmi yakalama
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 100 && data != null && data.getData() != null){
             imageUri = data.getData();
-            imgProfile.setImageURI(imageUri); // Ekranda göster
+            imgProfile.setImageURI(imageUri);
         }
     }
 
@@ -97,10 +89,10 @@ public class EditProfileActivity extends AppCompatActivity {
 
         String uid = auth.getCurrentUser().getUid();
         String name = etName.getText().toString();
-        String username = etUsername.getText().toString(); // Burada kullanıcı adını alıyoruz
+        String username = etUsername.getText().toString();
         String bio = etBio.getText().toString();
 
-        Toast.makeText(this, "Güncelleniyor...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Updating...", Toast.LENGTH_SHORT).show();
 
         if (imageUri != null) {
             StorageReference fileRef = storage.getReference().child("profile_images/" + uid + ".jpg");
@@ -116,24 +108,20 @@ public class EditProfileActivity extends AppCompatActivity {
 
     private void saveToFirestore(String uid, String name, String username, String bio, String imgUrl) {
         Map<String, Object> userUpdates = new HashMap<>();
-        // --- DÜZELTME 2: Veritabanı Anahtar İsmi (Key) ---
-        // ProfileFragment "userName" okuduğu için burası da "userName" olmalı.
-        // Önceden "username" (küçük n) idi.
-        userUpdates.put("fullName", name); // ProfileFragment "fullName" okuyor olabilir, kontrol et.
-        userUpdates.put("name", name);     // Garanti olsun diye ikisini de ekledim.
+        userUpdates.put("fullName", name);
+        userUpdates.put("name", name);
 
-        userUpdates.put("userName", username); // <-- KRİTİK DÜZELTME: 'username' yerine 'userName'
-
+        userUpdates.put("userName", username);
         userUpdates.put("bio", bio);
         if (imgUrl != null) userUpdates.put("profileImage", imgUrl);
 
         db.collection("users").document(uid).update(userUpdates)
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(EditProfileActivity.this, "Profil başarıyla güncellendi!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditProfileActivity.this, "Profile updated successfully!", Toast.LENGTH_SHORT).show();
                     finish();
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(EditProfileActivity.this, "Hata oluştu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditProfileActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 }
